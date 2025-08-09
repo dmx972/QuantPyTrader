@@ -1,0 +1,955 @@
+<PRD>
+# Product Requirements Document: QuantPyTrader - Open-Source Quantitative Trading Platform
+
+## 1. Introduction
+
+This Product Requirements Document (PRD) defines the comprehensive specifications for QuantPyTrader, an open-source quantitative trading platform designed for educational purposes and practical implementation. The document outlines the complete product vision, technical architecture, feature requirements, and implementation strategy for developing a sophisticated trading application that leverages advanced mathematical models, specifically the BE-EMA-MMCUKF (Bayesian Estimation-based Expected Mode Augmentation Multiple Model Unscented Kalman Filter) framework, alongside traditional trading strategies.
+
+The PRD serves as the authoritative reference for all stakeholders involved in the development, testing, and deployment of QuantPyTrader, ensuring alignment on objectives, scope, and deliverables throughout the project lifecycle.
+
+## 2. Product overview
+
+### 2.1 Product description
+
+QuantPyTrader is a comprehensive quantitative trading platform built exclusively with open-source Python libraries, designed to bridge the gap between academic research and practical trading implementation. The platform features a dual-strategy system combining passive technical indicators with an advanced active state-based model using the BE-EMA-MMCUKF framework.
+
+### 2.2 Key differentiators
+
+- **Advanced kalman filter implementation**: State-of-the-art BE-EMA-MMCUKF algorithm with multi-regime market modeling
+- **Educational focus**: Abundantly commented code with Jupyter notebook tutorials and comprehensive documentation
+- **Open-source commitment**: No proprietary dependencies, ensuring accessibility and transparency
+- **Robust data handling**: Bayesian missing data compensation maintaining performance with up to 20% data gaps
+- **State persistence**: Seamless continuation of mathematical models across different time periods
+- **Multi-broker integration**: Support for Alpaca, Interactive Brokers, TD Ameritrade, and MetaTrader 5
+
+### 2.3 Product scope
+
+The platform encompasses data acquisition, strategy development, backtesting, live trading execution, and performance analytics within a single integrated system. It targets individual traders and educational institutions while explicitly excluding high-frequency trading, regulatory compliance implementation, and institutional-scale operations.
+
+## 3. Goals and objectives
+
+### 3.1 Primary goals
+
+1. **Democratize quantitative trading**: Provide professional-grade trading tools using only open-source libraries
+2. **Educational excellence**: Create a learning platform that teaches both trading concepts and implementation
+3. **Production readiness**: Deliver a system capable of live trading with real capital
+4. **Research enablement**: Support strategy development and testing with comprehensive backtesting capabilities
+
+### 3.2 Measurable objectives
+
+- Achieve >75% accuracy in market regime detection using the BE-EMA-MMCUKF algorithm
+- Maintain <100ms update cycle for real-time trading decisions
+- Support backtesting across 10+ years of historical data
+- Enable simultaneous testing of 50+ strategy-instrument combinations
+- Achieve >20% Sharpe ratio improvement versus single-regime models
+- Reduce maximum drawdown by 15% during crisis periods
+- Handle 20% missing data without significant performance degradation
+
+### 3.3 Success metrics
+
+- User adoption: 1,000+ active users within first year
+- Strategy performance: Consistent positive returns in backtesting
+- System reliability: 99.5% uptime for live trading operations
+- Educational impact: 100+ completed Jupyter notebook tutorials per month
+- Community engagement: 50+ contributed strategies in the first year
+
+## 4. Target audience
+
+### 4.1 Primary users
+
+#### Retail traders
+- **Profile**: Individual traders with $10,000-$500,000 portfolios
+- **Needs**: Reliable backtesting, risk management, multi-broker support
+- **Technical level**: Intermediate Python knowledge, basic understanding of financial markets
+
+#### Quantitative researchers
+- **Profile**: Academic researchers and independent quants
+- **Needs**: Advanced mathematical models, state persistence, comprehensive metrics
+- **Technical level**: Advanced Python skills, strong mathematical background
+
+#### Trading educators
+- **Profile**: University professors and online course creators
+- **Needs**: Educational materials, clear documentation, demonstrable concepts
+- **Technical level**: Varied, requiring both simple and advanced features
+
+### 4.2 Secondary users
+
+#### Python developers
+- **Profile**: Developers interested in financial applications
+- **Needs**: Clean APIs, modular architecture, extensive documentation
+- **Technical level**: Strong programming skills, learning finance
+
+#### Finance students
+- **Profile**: Undergraduate and graduate students studying quantitative finance
+- **Needs**: Practical examples, tutorial notebooks, theoretical explanations
+- **Technical level**: Basic programming, developing financial knowledge
+
+### 4.3 Excluded users
+
+- High-frequency trading firms requiring microsecond latency
+- Institutional investors needing regulatory compliance features
+- Users without Python environment setup capabilities
+- Traders exclusively using mobile devices
+
+## 5. Features and requirements
+
+### 5.1 Core features
+
+#### 5.1.1 Multi-source data aggregation
+- **Description**: Real-time and historical data collection from multiple providers
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Support for Alpha Vantage, Polygon.io, Yahoo Finance, and crypto exchanges
+  - Automatic failover between data sources
+  - Data normalization and deduplication
+  - Rate limiting and quota management
+
+#### 5.1.2 BE-EMA-MMCUKF strategy implementation
+- **Description**: Advanced Kalman Filter framework with six market regime models
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Parallel execution of 6 Unscented Kalman Filters
+  - Real-time regime probability calculation
+  - State vector tracking (price, return, volatility, momentum)
+  - Bayesian missing data compensation
+  - Expected mode augmentation for dynamic adaptation
+
+#### 5.1.3 State persistence system
+- **Description**: Complete saving and restoration of mathematical model states
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Serialization of state estimates, covariance matrices, and regime probabilities
+  - Checkpoint creation and recovery
+  - Database storage with SQLite3
+  - Seamless continuation across date ranges
+
+#### 5.1.4 Comprehensive backtesting engine
+- **Description**: Historical strategy testing with walk-forward analysis
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Support for multiple timeframes (1min to 1day)
+  - Regime-aware performance analysis
+  - Missing data simulation (5-20% configurable gaps)
+  - Transaction cost modeling
+  - Slippage simulation
+
+#### 5.1.5 NLP-powered sentiment analysis
+- **Description**: Market sentiment extraction from news and social media
+- **Priority**: P1 (High)
+- **Requirements**:
+  - Integration with NewsAPI and Reddit API
+  - Pre-trained transformer models from Hugging Face
+  - Symbol-specific sentiment scoring
+  - Real-time sentiment updates
+
+#### 5.1.6 Live trading execution
+- **Description**: Automated order placement with broker APIs
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Paper trading mode for testing
+  - Real trading with capital controls
+  - Multi-broker support (Alpaca, IBKR, TD Ameritrade)
+  - Order type support (market, limit, stop)
+  - Position tracking and P&L calculation
+
+#### 5.1.7 Risk management system
+- **Description**: Position sizing and risk controls
+- **Priority**: P0 (Critical)
+- **Requirements**:
+  - Value-at-Risk (VaR) calculation
+  - Maximum drawdown limits
+  - Position sizing based on Kelly Criterion
+  - Regime uncertainty penalties
+  - Emergency stop mechanisms
+
+#### 5.1.8 Performance analytics dashboard
+- **Description**: Real-time visualization of strategy performance
+- **Priority**: P1 (High)
+- **Requirements**:
+  - Interactive charts with Plotly
+  - Regime probability evolution plots
+  - Filter uncertainty bands
+  - Traditional metrics (Sharpe, Calmar, Sortino)
+  - Custom metrics for Kalman filter performance
+
+### 5.2 Advanced features
+
+#### 5.2.1 Market regime detection
+- **Description**: Hidden Markov Model for market state identification
+- **Priority**: P2 (Medium)
+- **Requirements**:
+  - Six regime models (Bull, Bear, Sideways, High/Low Volatility, Crisis)
+  - Transition probability matrix estimation
+  - Likelihood-based regime detection
+
+#### 5.2.2 Portfolio optimization
+- **Description**: Multi-asset allocation strategies
+- **Priority**: P2 (Medium)
+- **Requirements**:
+  - Markowitz mean-variance optimization
+  - Black-Litterman model implementation
+  - Risk parity allocation
+
+#### 5.2.3 Batch testing framework
+- **Description**: Parallel testing across strategies and instruments
+- **Priority**: P1 (High)
+- **Requirements**:
+  - Concurrent execution using Celery
+  - Result aggregation and comparison
+  - Performance ranking and selection
+
+### 5.3 Non-functional requirements
+
+#### 5.3.1 Performance
+- Response time: <100ms for trading decisions
+- Throughput: 1000+ simultaneous backtests
+- Data processing: 1M+ candles per second
+
+#### 5.3.2 Reliability
+- System uptime: 99.5% availability
+- Data integrity: Zero data corruption
+- Recovery time: <5 minutes from failure
+
+#### 5.3.3 Scalability
+- Horizontal scaling for backtesting workloads
+- Support for 100+ concurrent users
+- 10TB+ historical data storage
+
+#### 5.3.4 Security
+- Encrypted storage of API keys
+- Secure broker authentication
+- Audit logging for all trades
+
+## 6. User stories and acceptance criteria
+
+### 6.1 Authentication and access
+
+**ST-101: User authentication**
+- **As a** trader
+- **I want to** securely authenticate to the platform
+- **So that** my trading strategies and API keys are protected
+- **Acceptance criteria**:
+  - User can register with email and password
+  - Password must meet complexity requirements (8+ chars, mixed case, numbers, symbols)
+  - API keys are encrypted using AES-256
+  - Session timeout after 30 minutes of inactivity
+  - Two-factor authentication option available
+
+### 6.2 Data management
+
+**ST-201: Database initialization**
+- **As a** system administrator
+- **I want to** initialize the database schema
+- **So that** all required tables are created correctly
+- **Acceptance criteria**:
+  - SQLite3 database created with all 15+ required tables
+  - Kalman filter state tables support BLOB storage
+  - Indexes created for timestamp columns
+  - Foreign key constraints enforced
+  - Migration scripts provided for schema updates
+
+**ST-202: Historical data import**
+- **As a** quantitative researcher
+- **I want to** import historical market data
+- **So that** I can backtest strategies over extended periods
+- **Acceptance criteria**:
+  - Support CSV, JSON, and Parquet formats
+  - Validate data integrity (no gaps, duplicates)
+  - Import 10+ years of daily data in <60 seconds
+  - Progress indicator during import
+  - Error reporting for invalid data
+
+**ST-203: Real-time data streaming**
+- **As a** day trader
+- **I want to** receive real-time market data
+- **So that** my strategies can react to current conditions
+- **Acceptance criteria**:
+  - WebSocket connection established with data providers
+  - <50ms latency from source to strategy
+  - Automatic reconnection on disconnection
+  - Data buffering during brief outages
+  - Rate limit compliance
+
+### 6.3 Strategy development
+
+**ST-301: BE-EMA-MMCUKF configuration**
+- **As a** quantitative trader
+- **I want to** configure the Kalman filter parameters
+- **So that** I can optimize for different market conditions
+- **Acceptance criteria**:
+  - GUI for parameter adjustment
+  - Parameter validation (numeric ranges)
+  - Save/load parameter sets
+  - Default configurations for each regime
+  - Real-time parameter impact visualization
+
+**ST-302: Strategy backtesting**
+- **As a** strategy developer
+- **I want to** backtest my strategy on historical data
+- **So that** I can evaluate its performance
+- **Acceptance criteria**:
+  - Select date range and instruments
+  - Configure initial capital and position sizing
+  - View detailed performance metrics
+  - Export results to CSV/PDF
+  - Compare multiple strategy runs
+
+**ST-303: Missing data simulation**
+- **As a** researcher
+- **I want to** test strategy robustness with missing data
+- **So that** I can ensure reliability in real conditions
+- **Acceptance criteria**:
+  - Configure missing data percentage (0-30%)
+  - Random or pattern-based gaps
+  - Performance comparison with/without gaps
+  - Visualization of compensation effectiveness
+
+**ST-304: State persistence management**
+- **As a** systematic trader
+- **I want to** save and restore Kalman filter states
+- **So that** I can continue trading after interruptions
+- **Acceptance criteria**:
+  - Save complete filter state to database
+  - Restore state from specific checkpoint
+  - Automatic checkpoint every hour
+  - State versioning and rollback
+  - State size <10MB per checkpoint
+
+### 6.4 Trading operations
+
+**ST-401: Paper trading activation**
+- **As a** new user
+- **I want to** test strategies with paper trading
+- **So that** I can validate performance without risk
+- **Acceptance criteria**:
+  - Virtual portfolio with configurable starting capital
+  - Realistic order execution simulation
+  - Track paper vs real performance
+  - Reset paper portfolio option
+  - Paper trade history export
+
+**ST-402: Live trading execution**
+- **As a** experienced trader
+- **I want to** execute real trades through broker APIs
+- **So that** I can profit from my strategies
+- **Acceptance criteria**:
+  - Broker connection status indicator
+  - Order confirmation before execution
+  - Real-time position tracking
+  - P&L calculation with fees
+  - Emergency stop button
+
+**ST-403: Multi-broker management**
+- **As a** professional trader
+- **I want to** trade across multiple brokers
+- **So that** I can optimize execution and costs
+- **Acceptance criteria**:
+  - Configure multiple broker accounts
+  - Route orders to specific brokers
+  - Aggregate positions across brokers
+  - Consolidated P&L reporting
+  - Broker-specific risk limits
+
+### 6.5 Risk management
+
+**ST-501: Position sizing calculation**
+- **As a** risk-conscious trader
+- **I want to** automatically size positions based on risk
+- **So that** I can protect my capital
+- **Acceptance criteria**:
+  - Kelly Criterion implementation
+  - Regime-based position adjustment
+  - Maximum position size limits
+  - Risk parity option
+  - Visual position size recommendations
+
+**ST-502: Drawdown monitoring**
+- **As a** portfolio manager
+- **I want to** monitor and limit drawdowns
+- **So that** I can preserve capital during adverse conditions
+- **Acceptance criteria**:
+  - Real-time drawdown calculation
+  - Configurable drawdown limits (10%, 20%, 30%)
+  - Automatic trading suspension on limit breach
+  - Drawdown recovery tracking
+  - Alert notifications
+
+**ST-503: VaR calculation**
+- **As a** risk manager
+- **I want to** calculate Value-at-Risk
+- **So that** I can quantify potential losses
+- **Acceptance criteria**:
+  - 95% and 99% VaR calculation
+  - Historical and parametric methods
+  - Regime-conditional VaR
+  - VaR backtesting
+  - VaR breach reporting
+
+### 6.6 Analytics and reporting
+
+**ST-601: Performance dashboard**
+- **As a** trader
+- **I want to** view real-time performance metrics
+- **So that** I can monitor strategy effectiveness
+- **Acceptance criteria**:
+  - Sharpe, Sortino, Calmar ratios
+  - Win rate and profit factor
+  - Maximum drawdown chart
+  - Regime-specific performance
+  - Customizable dashboard layout
+
+**ST-602: Regime visualization**
+- **As a** quantitative analyst
+- **I want to** visualize market regime probabilities
+- **So that** I can understand model behavior
+- **Acceptance criteria**:
+  - Stacked area chart of regime probabilities
+  - Regime transition heatmap
+  - Current regime indicator
+  - Historical regime accuracy
+  - Regime duration statistics
+
+**ST-603: Report generation**
+- **As a** fund manager
+- **I want to** generate professional reports
+- **So that** I can share results with stakeholders
+- **Acceptance criteria**:
+  - PDF and HTML export formats
+  - Customizable report templates
+  - Include charts and tables
+  - Period selection (daily, weekly, monthly)
+  - Automated email delivery
+
+### 6.7 System monitoring
+
+**ST-701: System health monitoring**
+- **As a** system administrator
+- **I want to** monitor system health
+- **So that** I can ensure reliable operation
+- **Acceptance criteria**:
+  - CPU, memory, disk usage metrics
+  - API quota tracking
+  - Database performance metrics
+  - WebSocket connection status
+  - Alert on threshold breaches
+
+**ST-702: Audit logging**
+- **As a** compliance officer
+- **I want to** track all trading activities
+- **So that** I can maintain audit trails
+- **Acceptance criteria**:
+  - Log all order submissions
+  - Record strategy parameter changes
+  - Track user login/logout
+  - Timestamp all events
+  - Export logs for analysis
+
+### 6.8 Educational features
+
+**ST-801: Interactive tutorials**
+- **As a** beginner
+- **I want to** learn through interactive tutorials
+- **So that** I can understand the platform
+- **Acceptance criteria**:
+  - Step-by-step Jupyter notebooks
+  - Code examples with explanations
+  - Practice exercises with solutions
+  - Progress tracking
+  - Difficulty levels (beginner, intermediate, advanced)
+
+**ST-802: Strategy templates**
+- **As a** new strategy developer
+- **I want to** use pre-built strategy templates
+- **So that** I can learn and modify existing strategies
+- **Acceptance criteria**:
+  - 10+ strategy templates included
+  - Detailed comments in code
+  - Performance benchmarks provided
+  - Template customization wizard
+  - Template sharing capability
+
+### 6.9 Edge cases and error handling
+
+**ST-901: Network disconnection handling**
+- **As a** trader
+- **I want** the system to handle network disconnections gracefully
+- **So that** my trading isn't disrupted
+- **Acceptance criteria**:
+  - Automatic reconnection attempts
+  - Queue orders during disconnection
+  - State preservation during outage
+  - User notification of connection status
+  - Fallback to cached data
+
+**ST-902: Invalid data handling**
+- **As a** system user
+- **I want** the system to handle invalid data
+- **So that** strategies don't crash
+- **Acceptance criteria**:
+  - Validate all incoming data
+  - Log and skip invalid records
+  - Alert on data quality issues
+  - Provide data correction tools
+  - Continue operation with valid data
+
+**ST-903: Broker API failures**
+- **As a** live trader
+- **I want** robust handling of broker API failures
+- **So that** trades aren't lost or duplicated
+- **Acceptance criteria**:
+  - Retry logic with exponential backoff
+  - Order deduplication
+  - Failure notification
+  - Manual intervention option
+  - Automatic broker failover
+
+## 7. Technical requirements / stack
+
+### 7.1 Development environment
+
+#### Programming language
+- **Primary**: Python 3.11.13
+- **Character encoding**: UTF-8 (Windows compatibility required)
+- **Package management**: pip with requirements.txt
+- **Virtual environment**: venv or conda
+
+#### Operating systems
+- **Development**: Windows 10/11, Kubuntu 24
+- **Production**: Ubuntu Server 22.04 LTS
+- **Containerization**: Docker 24.0+
+
+### 7.2 Backend architecture
+
+#### Web framework
+- **Framework**: FastAPI 0.104+
+- **ASGI server**: Uvicorn
+- **API documentation**: Auto-generated OpenAPI/Swagger
+- **Authentication**: JWT tokens
+
+#### Task processing
+- **Queue**: Celery 5.3+
+- **Broker**: Redis 7.0+
+- **Scheduling**: Celery Beat
+- **Monitoring**: Flower
+
+#### Real-time communication
+- **WebSocket**: python-socketio
+- **Protocol**: Socket.IO
+- **Scaling**: Redis adapter
+
+### 7.3 Frontend technologies
+
+#### Primary interface
+- **Framework**: Streamlit 1.28+
+- **Alternative**: Dash 2.14+ for advanced visualizations
+- **Styling**: Custom CSS with dark mode
+
+#### Visualization libraries
+- **Interactive charts**: Plotly 5.17+
+- **Advanced plots**: Bokeh 3.3+
+- **Tables**: AG-Grid via Streamlit components
+- **UI components**: Streamlit-extras, Dash Bootstrap Components
+
+### 7.4 Data and machine learning
+
+#### Data processing
+- **Primary**: Pandas 2.1+
+- **Performance**: Polars for large datasets
+- **Numerical**: NumPy 1.24+
+- **Matrix operations**: SciPy 1.11+
+
+#### Machine learning
+- **Classical ML**: Scikit-learn 1.3+
+- **Deep learning**: TensorFlow 2.14+ / PyTorch 2.1+
+- **NLP**: Transformers 4.35+ (Hugging Face)
+- **Time series**: Statsmodels 0.14+
+
+#### Technical analysis
+- **Indicators**: pandas-ta
+- **Alternative**: tulipy (pure Python, no ta-lib)
+- **Custom indicators**: NumPy-based implementations
+
+### 7.5 Kalman filter stack
+
+#### Core libraries
+- **Base implementation**: FilterPy 1.4+
+- **Alternative**: PyKalman 0.9+
+- **Probabilistic**: PyMC 5.9+
+- **Optimization**: CVXPY 1.4+
+
+#### Custom modules
+- **UKF implementation**: Pure NumPy
+- **State management**: Pickle/Joblib
+- **Missing data handler**: Custom Bayesian estimator
+
+### 7.6 Database and storage
+
+#### Primary database
+- **System**: SQLite3 (built-in)
+- **ORM**: SQLAlchemy 2.0+
+- **Migrations**: Alembic
+
+#### Caching
+- **System**: Redis 7.0+
+- **Python client**: redis-py
+- **Serialization**: Pickle for complex objects
+
+#### Time-series (optional)
+- **Alternative 1**: TimescaleDB
+- **Alternative 2**: InfluxDB
+- **Alternative 3**: Parquet files with PyArrow
+
+### 7.7 Infrastructure
+
+#### Containerization
+- **Container**: Docker 24.0+
+- **Orchestration**: docker-compose
+- **Registry**: Docker Hub or private registry
+
+#### Monitoring
+- **Metrics**: Prometheus
+- **Visualization**: Grafana
+- **Logging**: Python logging with JSON formatter
+- **Log aggregation**: ELK stack (optional)
+
+### 7.8 External APIs
+
+#### Market data
+- **Alpha Vantage**: REST API with provided key
+- **Polygon.io**: WebSocket and REST with provided key
+- **Yahoo Finance**: yfinance library
+- **Binance/Coinbase**: Official Python SDKs
+
+#### Intelligence
+- **News**: NewsAPI with authentication
+- **Reddit**: PRAW library
+- **Economic data**: FRED API with provided key
+
+#### AI services
+- **Anthropic**: Claude API with provided key
+- **Google**: Gemini API with provided key
+- **Hugging Face**: Transformers library
+
+#### Brokers
+- **Alpaca**: alpaca-py SDK
+- **Interactive Brokers**: ib_insync library
+- **TD Ameritrade**: tda-api library
+- **MetaTrader 5**: MetaTrader5 Python package
+
+### 7.9 Development tools
+
+#### Version control
+- **System**: Git
+- **Platform**: GitHub/GitLab
+- **Branching**: GitFlow strategy
+
+#### Testing
+- **Unit tests**: pytest 7.4+
+- **Coverage**: pytest-cov
+- **Mocking**: unittest.mock
+- **Integration**: pytest-asyncio
+
+#### Documentation
+- **Code**: Google-style docstrings
+- **API**: Auto-generated from FastAPI
+- **User guide**: MkDocs with Material theme
+- **Notebooks**: Jupyter Lab
+
+### 7.10 Performance requirements
+
+#### Computational
+- **Kalman update**: <100ms per cycle
+- **Backtest speed**: 1M+ candles/second
+- **Data ingestion**: 10K records/second
+
+#### Concurrency
+- **Parallel backtests**: 100+ simultaneous
+- **WebSocket connections**: 1000+ concurrent
+- **API requests**: 100 requests/second
+
+#### Storage
+- **Database size**: 10TB+ capacity
+- **State checkpoints**: <10MB per save
+- **Cache size**: 16GB Redis memory
+
+## 8. Design and user interface
+
+### 8.1 Design philosophy
+
+#### Core principles
+- **Data density**: Maximum information per screen
+- **Dark mode first**: Professional trading aesthetic
+- **Responsive design**: Adaptive layouts for different screens
+- **Real-time updates**: Live data without manual refresh
+- **Progressive disclosure**: Complex features revealed gradually
+- **Accessibility**: WCAG 2.1 AA compliance
+
+### 8.2 Visual design system
+
+#### Color palette
+
+##### Dark theme (primary)
+- **Background**: #0d1117 (deep black)
+- **Surface**: #161b22 (elevated surface)
+- **Border**: #30363d (subtle borders)
+- **Primary**: #58a6ff (electric blue)
+- **Success**: #3fb950 (positive green)
+- **Warning**: #d29922 (amber alert)
+- **Danger**: #f85149 (critical red)
+- **Text primary**: #c9d1d9 (high contrast)
+- **Text secondary**: #8b949e (muted)
+
+##### Light theme (optional)
+- **Background**: #ffffff (pure white)
+- **Surface**: #f6f8fa (light gray)
+- **Border**: #d0d7de (soft borders)
+- **Primary**: #0969da (deep blue)
+- **Success**: #1a7f37 (forest green)
+- **Warning**: #9a6700 (dark amber)
+- **Danger**: #cf222e (ruby red)
+- **Text primary**: #24292f (near black)
+- **Text secondary**: #57606a (gray)
+
+#### Typography
+
+##### Font families
+- **Headers**: Inter, -apple-system, system-ui, sans-serif
+- **Body text**: Roboto, Helvetica Neue, sans-serif
+- **Data/tables**: Roboto Mono, monospace
+- **Code**: JetBrains Mono, Consolas, monospace
+- **Charts**: Helvetica Neue, Arial, sans-serif
+
+##### Font sizes
+- **H1**: 32px (page titles)
+- **H2**: 24px (section headers)
+- **H3**: 20px (subsections)
+- **Body**: 14px (standard text)
+- **Small**: 12px (labels, captions)
+- **Data**: 13px (tables, metrics)
+
+### 8.3 Layout structure
+
+#### Dashboard layout
+```
+┌─────────────────────────────────────────────────────┐
+│ Navigation Bar                                      │
+├──────────┬──────────────────────────────┬──────────┤
+│ Sidebar  │ Main Content Area            │ Right    │
+│          │                              │ Panel    │
+│ • Market │ ┌──────────────────────────┐ │          │
+│ • Strat  │ │ Chart Widget             │ │ Metrics  │
+│ • Back   │ └──────────────────────────┘ │          │
+│ • Risk   │ ┌──────────────────────────┐ │ Regime   │
+│ • Trade  │ │ Data Table               │ │ Probs    │
+│          │ └──────────────────────────┘ │          │
+│          │ ┌──────────────────────────┐ │ Alerts   │
+│          │ │ Control Panel            │ │          │
+│          │ └──────────────────────────┘ │          │
+└──────────┴──────────────────────────────┴──────────┘
+```
+
+#### Grid system
+- **Columns**: 12-column responsive grid
+- **Breakpoints**:
+  - Mobile: <768px (single column)
+  - Tablet: 768-1024px (two columns)
+  - Desktop: 1024-1440px (three columns)
+  - Wide: >1440px (four columns)
+- **Spacing**: 8px base unit (8, 16, 24, 32px)
+
+### 8.4 Component design
+
+#### Navigation
+- **Top bar**: Fixed position with logo, search, user menu
+- **Sidebar**: Collapsible with icon/text navigation
+- **Breadcrumbs**: Contextual navigation path
+- **Tabs**: In-page navigation for related content
+
+#### Data visualization
+- **Charts**:
+  - Candlestick for price data
+  - Line charts for indicators
+  - Heatmaps for correlation
+  - Stacked area for regime probabilities
+- **Tables**:
+  - Sortable columns
+  - Inline editing capabilities
+  - Export functionality
+  - Pagination or virtual scrolling
+- **Metrics cards**:
+  - Large number display
+  - Trend indicator (up/down arrow)
+  - Sparkline mini-chart
+  - Period comparison
+
+#### Forms and inputs
+- **Input fields**:
+  - Floating labels
+  - Clear validation messages
+  - Helper text
+  - Input masks for numbers
+- **Buttons**:
+  - Primary: Blue (#58a6ff)
+  - Secondary: Gray outline
+  - Danger: Red (#f85149)
+  - Success: Green (#3fb950)
+- **Toggles and switches**:
+  - Clear on/off states
+  - Labels on both sides
+  - Animated transitions
+
+#### Feedback elements
+- **Notifications**:
+  - Toast messages (top-right)
+  - Auto-dismiss after 5 seconds
+  - Action buttons for critical alerts
+- **Loading states**:
+  - Skeleton screens for content
+  - Progress bars for operations
+  - Spinners for quick actions
+- **Empty states**:
+  - Illustrative icon
+  - Descriptive message
+  - Call-to-action button
+
+### 8.5 Specific interface screens
+
+#### 8.5.1 Strategy configuration
+- **Layout**: Three-panel design
+  - Left: Strategy tree/list
+  - Center: Configuration form
+  - Right: Live preview
+- **Features**:
+  - Drag-drop parameter adjustment
+  - Real-time validation
+  - Parameter templates
+  - Version history
+
+#### 8.5.2 Backtesting interface
+- **Layout**: Split view
+  - Top: Chart with trade markers
+  - Bottom: Metrics and statistics
+- **Controls**:
+  - Date range picker
+  - Instrument selector
+  - Parameter sliders
+  - Run/pause/stop buttons
+- **Results display**:
+  - Performance summary cards
+  - Trade list table
+  - Equity curve chart
+  - Drawdown visualization
+
+#### 8.5.3 Live trading dashboard
+- **Layout**: Customizable widget grid
+- **Widgets**:
+  - Position monitor
+  - P&L tracker
+  - Order book
+  - Market depth
+  - News feed
+  - Regime indicator
+- **Critical controls**:
+  - Emergency stop (red, prominent)
+  - Paper/live toggle
+  - Risk limit indicators
+
+#### 8.5.4 Kalman filter visualization
+- **Regime probability chart**:
+  - Stacked area chart
+  - Color-coded regimes
+  - Current regime highlight
+  - Transition markers
+- **State vector display**:
+  - 4-panel view (price, return, volatility, momentum)
+  - Confidence bands
+  - Missing data indicators
+- **Filter diagnostics**:
+  - Likelihood scores
+  - Innovation sequence
+  - Covariance trace
+  - Reception rate gauge
+
+### 8.6 Interaction design
+
+#### Animations
+- **Transitions**: 200ms ease-in-out
+- **Hover effects**: Subtle elevation or glow
+- **Loading**: Smooth progress animations
+- **Data updates**: Fade-in for new data
+
+#### Micro-interactions
+- **Button press**: Scale down slightly (0.95)
+- **Toggle switch**: Smooth slide animation
+- **Tab change**: Underline slide effect
+- **Tooltip**: Fade-in with 500ms delay
+
+#### Keyboard shortcuts
+- **Ctrl+S**: Save configuration
+- **Ctrl+R**: Run backtest
+- **Ctrl+E**: Emergency stop
+- **Ctrl+D**: Toggle dark mode
+- **F1**: Help documentation
+- **ESC**: Close modal/dialog
+
+### 8.7 Responsive design
+
+#### Mobile adaptations
+- **Navigation**: Bottom tab bar
+- **Charts**: Simplified, touch-friendly
+- **Tables**: Horizontal scroll
+- **Forms**: Full-width inputs
+- **Modals**: Full-screen on mobile
+
+#### Tablet optimizations
+- **Layout**: Two-column grid
+- **Navigation**: Collapsible sidebar
+- **Charts**: Touch gestures enabled
+- **Tables**: Frozen first column
+
+#### Desktop enhancements
+- **Multi-monitor**: Detachable windows
+- **Drag-and-drop**: Widget rearrangement
+- **Keyboard**: Full shortcut support
+- **Mouse**: Hover previews
+
+### 8.8 Accessibility
+
+#### Visual accessibility
+- **Contrast**: Minimum 4.5:1 for normal text
+- **Font size**: Minimum 14px, scalable to 200%
+- **Color coding**: Never sole indicator
+- **Focus indicators**: Visible keyboard navigation
+
+#### Screen reader support
+- **ARIA labels**: All interactive elements
+- **Landmark regions**: Proper page structure
+- **Alt text**: All charts and images
+- **Announcements**: Live region updates
+
+#### Interaction accessibility
+- **Keyboard**: Full keyboard navigation
+- **Touch targets**: Minimum 44x44px
+- **Time limits**: User-adjustable
+- **Error messages**: Clear and descriptive
+
+### 8.9 Branding elements
+
+#### Logo design
+- **Primary mark**: "QT" monogram in geometric style
+- **Wordmark**: "QuantPyTrader" in Inter font
+- **Colors**: Blue gradient (#58a6ff to #0969da)
+- **Variations**: Light/dark/monochrome
+
+#### Visual style
+- **Glass morphism**: Subtle blur and transparency
+- **Shadows**: Multi-layer for depth
+- **Borders**: 1px with low opacity
+- **Corners**: 8px border radius standard
+
+#### Loading and empty states
+- **Loading animation**: Pulsing logo
+- **Empty state illustration**: Line art style
+- **Progress indicators**: Branded colors
+- **Skeleton screens**: Animated gradient
+</PRD>

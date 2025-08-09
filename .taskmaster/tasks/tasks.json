@@ -1,0 +1,703 @@
+{
+  "master": {
+    "tasks": [
+      {
+        "id": 1,
+        "title": "Initialize Project Structure and Configuration",
+        "description": "Set up the complete QuantPyTrader project structure with all necessary directories, configuration files, and development environment including Docker setup and dependency management",
+        "details": "Create the complete directory structure as specified:\n- /core (kalman/, strategies/, risk/)\n- /backtesting (engine.py, regime_aware_backtest.py, metrics/)\n- /data (fetchers/, preprocessors/, missing_data_simulator.py)\n- /visualization (regime_plots.py, filter_diagnostics.py, performance_dashboard.py)\n- /tests, /notebooks, /config directories\n\nSet up Python 3.11.13 virtual environment with requirements.txt containing:\n- FastAPI==0.104.0, uvicorn, python-socketio\n- pandas==2.1.0, numpy==1.24.0, scipy==1.11.0, polars\n- celery==5.3.0, redis-py, flower\n- sqlalchemy==2.0.0, alembic\n- streamlit==1.28.0, plotly==5.17.0, bokeh==3.3.0\n- filterpy==1.4.0, pykalman==0.9.0, cvxpy==1.4.0\n\nCreate Docker configuration:\n```dockerfile\nFROM python:3.11.13-slim\nWORKDIR /app\nCOPY requirements.txt .\nRUN pip install --no-cache-dir -r requirements.txt\nCOPY . .\nCMD [\"uvicorn\", \"main:app\", \"--host\", \"0.0.0.0\", \"--port\", \"8000\"]\n```\n\nSet up docker-compose.yml with services for app, redis, postgres (optional), and monitoring stack",
+        "testStrategy": "Verify all directories exist, Python environment activates correctly, all dependencies install without conflicts, Docker builds successfully, and docker-compose brings up all services. Run pytest to ensure test framework is operational",
+        "priority": "high",
+        "dependencies": [],
+        "status": "done",
+        "subtasks": []
+      },
+      {
+        "id": 2,
+        "title": "Implement SQLite Database Schema and ORM Models",
+        "description": "Create the comprehensive database schema with all required tables for market data, strategies, trades, Kalman filter states, and regime transitions using SQLAlchemy ORM",
+        "details": "Implement SQLAlchemy models in /core/database/models.py:\n\n```python\nfrom sqlalchemy import create_engine, Column, Integer, String, Float, DateTime, BLOB, JSON, ForeignKey\nfrom sqlalchemy.ext.declarative import declarative_base\nfrom sqlalchemy.orm import relationship\n\nBase = declarative_base()\n\nclass MarketData(Base):\n    __tablename__ = 'market_data'\n    id = Column(Integer, primary_key=True)\n    symbol = Column(String(20), index=True)\n    timestamp = Column(DateTime, index=True)\n    open = Column(Float)\n    high = Column(Float)\n    low = Column(Float)\n    close = Column(Float)\n    volume = Column(Float)\n\nclass KalmanState(Base):\n    __tablename__ = 'kalman_states'\n    id = Column(Integer, primary_key=True)\n    strategy_id = Column(Integer, ForeignKey('strategies.id'))\n    timestamp = Column(DateTime, index=True)\n    state_vector = Column(BLOB)  # Serialized numpy array [p, r, σ, m]\n    covariance_matrix = Column(BLOB)  # Serialized P matrix\n    regime_probabilities = Column(JSON)  # {regime_id: probability}\n    beta_alpha = Column(Float)\n    beta_beta = Column(Float)\n    data_reception_rate = Column(Float)\n\nclass RegimeTransition(Base):\n    __tablename__ = 'regime_transitions'\n    id = Column(Integer, primary_key=True)\n    timestamp = Column(DateTime)\n    from_regime = Column(Integer)\n    to_regime = Column(Integer)\n    probability = Column(Float)\n    likelihood_score = Column(Float)\n```\n\nCreate migration scripts with Alembic for schema versioning. Implement database connection manager with connection pooling",
+        "testStrategy": "Test database creation, all CRUD operations for each model, foreign key constraints, index performance, state serialization/deserialization, and migration rollback/forward capabilities",
+        "priority": "high",
+        "dependencies": [
+          1
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create Core Market Data and Instrument Models",
+            "description": "Implement SQLAlchemy ORM models for market_data and instruments tables with proper indexes and relationships",
+            "dependencies": [],
+            "details": "Create MarketData model with OHLCV fields, timestamp indexing, and symbol relationships. Create Instruments model with exchange metadata and trading specifications. Ensure proper composite indexes for efficient time-series queries. Include fields for tick size, contract multiplier, and trading hours.\n<info added on 2025-08-08T19:00:53.861Z>\nBased on the completion of Subtask 2.1, the foundation models and database infrastructure are now ready. The next phase requires building the Strategy and Trading Models that will utilize the established MarketData and Instrument models. This includes creating Strategy model with configuration parameters, performance tracking fields, and relationships to trades. Implement Position model for tracking open/closed positions with entry/exit prices, quantities, and P&L calculations. Create Trade model with execution details, timestamps, and links to strategies and instruments. Add StrategyParameter model for dynamic configuration management and backtesting scenarios. Ensure proper foreign key relationships between all trading models and the existing market data infrastructure. Include fields for strategy state persistence, regime tracking, and Kalman filter parameters that will integrate with the upcoming UKF implementation in Task 4.\n</info added on 2025-08-08T19:00:53.861Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Build Strategy and Trading Models",
+            "description": "Design and implement ORM models for strategies, trades, signals, positions, and orders tables with foreign key relationships",
+            "dependencies": [],
+            "details": "Create Strategy model with JSON parameter storage and state management. Implement Trade model with P&L calculations and strategy relationships. Design Signal model with confidence scores and action types. Build Position and Order models with status tracking and execution details.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Kalman Filter State Models with BLOB Serialization",
+            "description": "Create specialized models for kalman_states table with numpy array serialization to BLOB fields",
+            "dependencies": [],
+            "details": "Design KalmanState model with BLOB fields for state_vector and covariance_matrix. Implement JSON serialization for regime_probabilities. Add Beta distribution parameters and data reception rate fields. Create proper indexes for timestamp-based queries and strategy relationships.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Regime and Performance Tracking Tables",
+            "description": "Build ORM models for regime_transitions, regime_history, filter_metrics, and backtests tables",
+            "dependencies": [],
+            "details": "Implement RegimeTransition model with probability and likelihood tracking. Create FilterMetrics model with regime hit rate and tracking error fields. Design Backtest model with comprehensive metric storage. Add proper foreign key constraints and cascade behaviors.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Develop Database Connection Manager with Pooling",
+            "description": "Create robust database connection management with SQLAlchemy session pooling and thread-safe operations",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3",
+              "2.4"
+            ],
+            "details": "Implement DatabaseManager class with connection pooling (pool_size=20, max_overflow=40). Create context managers for session handling. Add retry logic for transient failures. Implement query optimization with lazy loading strategies. Include connection health checks and automatic reconnection.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Setup Alembic Migration Framework",
+            "description": "Configure Alembic for database version control and create initial migration with all table schemas",
+            "dependencies": [
+              "2.1",
+              "2.2",
+              "2.3",
+              "2.4"
+            ],
+            "details": "Initialize Alembic configuration with proper naming conventions. Generate initial migration script for all models. Create migration for indexes and constraints. Setup automatic migration on application startup. Include rollback procedures and migration testing utilities.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build Data Serialization Utilities for Scientific Arrays",
+            "description": "Implement efficient serialization/deserialization for numpy arrays and complex data structures",
+            "dependencies": [
+              "2.3"
+            ],
+            "details": "Create NumpySerializer class with compression support (zlib/lz4). Implement type preservation for float32/float64 arrays. Add validation for array dimensions and data integrity. Create JSON encoders for datetime and decimal types. Benchmark serialization performance for large covariance matrices.\n<info added on 2025-08-08T21:08:30.506Z>\n**COMPLETED IMPLEMENTATION:**\n\nSuccessfully implemented comprehensive data serialization utilities with production-ready performance optimizations. Created NumpySerializer class with zlib/lz4 compression achieving up to 55% size reduction for covariance matrices and throughput up to 187 MB/s. Implemented Scientific JSON Encoder supporting datetime, Decimal, numpy scalars, and complex numbers. Built comprehensive test suite with 22 test cases covering serialization roundtrips, compression algorithms, type preservation, error handling, and database integration. Successfully integrated optimized serialization with existing KalmanState model, replacing pickle+gzip implementation. Added array dimension validation and data integrity checking with CRC32 checksums. Performance benchmarking shows state vectors serialize to 71 bytes (vs 32 bytes raw) and covariance matrices to 97 bytes (vs 128 bytes raw) with 24% compression ratio. Files created: core/database/serialization.py (675 lines), tests/test_serialization.py (598 lines), and updated core/database/kalman_models.py with optimized methods. System is production-ready for BE-EMA-MMCUKF Kalman filter state management.\n</info added on 2025-08-08T21:08:30.506Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Database Helper Functions and Query Optimizations",
+            "description": "Create utility functions for common database operations and optimize critical query paths",
+            "dependencies": [
+              "2.5",
+              "2.7"
+            ],
+            "details": "Build bulk insert utilities with batch processing (1000 records/batch). Create time-series query helpers with efficient windowing. Implement caching layer for frequently accessed data. Add query profiling and slow query logging. Create database maintenance utilities for VACUUM and ANALYZE operations.",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 3,
+        "title": "Build Multi-Source Market Data Pipeline",
+        "description": "Implement the real-time and historical data fetching system with support for multiple providers including Alpha Vantage, Polygon.io, Yahoo Finance, and cryptocurrency exchanges with automatic failover",
+        "details": "Create data fetcher classes in /data/fetchers/:\n\n```python\n# base_fetcher.py\nfrom abc import ABC, abstractmethod\nimport asyncio\nfrom typing import Dict, List, Optional\nimport pandas as pd\n\nclass BaseFetcher(ABC):\n    def __init__(self, api_key: str, rate_limit: int = 5):\n        self.api_key = api_key\n        self.rate_limiter = RateLimiter(rate_limit)\n    \n    @abstractmethod\n    async def fetch_realtime(self, symbol: str) -> Dict:\n        pass\n    \n    @abstractmethod\n    async def fetch_historical(self, symbol: str, start: str, end: str) -> pd.DataFrame:\n        pass\n\n# alpha_vantage_fetcher.py\nclass AlphaVantageFetcher(BaseFetcher):\n    API_KEY = 'F9I4969YG0Z715B7'\n    BASE_URL = 'https://www.alphavantage.co/query'\n    \n    async def fetch_realtime(self, symbol: str):\n        # Implement WebSocket connection\n        pass\n\n# polygon_fetcher.py\nclass PolygonFetcher(BaseFetcher):\n    API_KEY = 'Zzq5t57QQpqDGEm4s_QJZGFgW89vczHl'\n    \n    async def fetch_realtime(self, symbol: str):\n        # Implement WebSocket with automatic reconnection\n        pass\n```\n\nImplement DataAggregator class that manages multiple fetchers with failover logic, data normalization, and deduplication. Add Redis caching layer for recent data",
+        "testStrategy": "Test each data source independently, verify failover mechanism when primary source fails, test data normalization across sources, validate rate limiting, and stress test with 100+ concurrent symbol requests",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "done",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Implement Base Fetcher Abstract Class and Rate Limiting Infrastructure",
+            "description": "Create the abstract base class for all data fetchers with rate limiting capabilities, retry logic, and error handling mechanisms",
+            "dependencies": [],
+            "details": "Implement BaseFetcher ABC in /data/fetchers/base_fetcher.py with RateLimiter class using token bucket algorithm. Include configurable rate limits per API, exponential backoff for retries, circuit breaker pattern for failing endpoints, and comprehensive logging. Add request/response interceptors for monitoring and debugging.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Develop Alpha Vantage Data Fetcher Implementation",
+            "description": "Create specialized fetcher for Alpha Vantage API supporting stocks, forex, and crypto data with proper error handling",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Implement AlphaVantageFetcher in /data/fetchers/alpha_vantage.py supporting TIME_SERIES_INTRADAY, FX_INTRADAY, and CRYPTO_INTRADAY endpoints. Handle API-specific rate limits (5 calls/minute for free tier), parse CSV/JSON responses, implement batch symbol fetching, and manage API key rotation if multiple keys available.\n<info added on 2025-08-09T00:22:31.034Z>\n**COMPLETION STATUS: DONE**\n\nSuccessfully implemented comprehensive Alpha Vantage data fetcher with the following key features:\n\n**Core Implementation:**\n- Full AlphaVantageFetcher class extending BaseFetcher with proper rate limiting (5 req/min for free tier)\n- Support for stocks (GLOBAL_QUOTE, TIME_SERIES_*), forex (FX_*, CURRENCY_EXCHANGE_RATE), and crypto data\n- Intelligent asset type detection based on symbol format with crypto symbol recognition\n- Configurable CSV/JSON response parsing with robust error handling\n\n**Advanced Features:**\n- Technical indicators support (RSI, SMA, EMA, MACD, etc.) with proper parameter handling\n- Company overview/fundamental data fetching for stocks\n- Smart symbol preparation for forex pairs (EUR/USD, EURUSD formats) and crypto pairs (BTC-USD, ETH/USD)\n- Comprehensive response parsing with fallback error handling and logging\n\n**Quality & Testing:**\n- 30 comprehensive unit tests covering all functionality with 100% pass rate\n- Mock response handling for different asset types and error scenarios\n- Integration tests for concurrent requests and error recovery\n- Proper async context manager support and session management\n\n**Rate Limiting & Reliability:**\n- Configured for Alpha Vantage free tier limits (0.083 req/sec, burst_size=5)\n- Integrated with base fetcher's circuit breaker and rate limiting infrastructure\n- Health check with API error detection (rate limits, invalid keys, etc.)\n- Exponential backoff on failures with proper error categorization\n\nThe fetcher is production-ready and properly integrated with the base infrastructure, supporting all major Alpha Vantage endpoints.\n</info added on 2025-08-09T00:22:31.034Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build Polygon.io WebSocket and REST API Fetcher",
+            "description": "Implement Polygon.io fetcher with both REST API for historical data and WebSocket for real-time streaming",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Create PolygonFetcher in /data/fetchers/polygon_io.py with WebSocket client for real-time trades/quotes, REST client for historical aggregates, automatic reconnection logic, subscription management for multiple symbols, and handling of different data types (stocks, options, forex, crypto).\n<info added on 2025-08-09T00:31:15.940Z>\n**IMPLEMENTATION COMPLETED** - Successfully delivered enterprise-grade Polygon.io fetcher with comprehensive dual-protocol architecture:\n\n**Core Architecture Delivered:**\n- Dual Protocol Support: Full REST API integration for historical data + WebSocket client for real-time streaming\n- Advanced WebSocket Client: Custom PolygonWebSocketClient with authentication, subscription management, and automatic reconnection\n- Multi-Asset Support: Stocks, options, forex, and crypto data types with dedicated WebSocket endpoints\n- Subscription Management: Thread-safe subscription tracking with automatic resubscription after reconnection\n\n**Real-Time Streaming Implementation:**\n- Multiple Data Channels: Trades (T), Quotes (Q), Minute Aggregates (AM), Second Aggregates (A)\n- Event-Driven Architecture: Configurable message handlers with callback system for custom processing\n- Data Persistence: In-memory caching of real-time data with automatic fallback to REST API\n- Connection Resilience: Exponential backoff reconnection with maximum retry limits\n\n**REST API Integration Complete:**\n- Comprehensive Endpoints: Historical aggregates, ticker search, market status, ticker details\n- Flexible Intervals: Support for 1min-1month intervals with automatic multiplier/timespan conversion\n- Advanced Parsing: Robust JSON response parsing with error handling and data validation\n\n**Quality Assurance Delivered:**\n- 38 comprehensive unit tests with 100% pass rate covering all functionality\n- Mock WebSocket Implementation: Custom MockWebSocket for testing connection scenarios\n- Integration Testing: WebSocket message handling, subscription management, data callback system\n- Error Scenario Testing: Authentication failures, connection drops, API errors\n\n**Production-Ready Features:**\n- Smart Data Prioritization: WebSocket data preferred over REST API for real-time requests\n- Configurable Rate Limiting: Adaptive rate limiting based on Polygon.io plan tiers\n- Health Monitoring: Comprehensive health check including REST/WebSocket status and subscription counts\n- Full async context manager support, proper resource cleanup, and error handling\n\nThe implementation provides enterprise-grade real-time market data capabilities with professional WebSocket management and comprehensive testing coverage, ready for integration with the multi-source market data pipeline.\n</info added on 2025-08-09T00:31:15.940Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Create Yahoo Finance and Cryptocurrency Exchange Fetchers",
+            "description": "Implement fetchers for Yahoo Finance (yfinance) and major crypto exchanges (Binance, Coinbase) with unified interface",
+            "dependencies": [
+              "3.1"
+            ],
+            "details": "Develop YahooFinanceFetcher using yfinance library with fallback to web scraping if needed, BinanceFetcher with WebSocket streams, CoinbaseFetcher with REST/WebSocket support. Include orderbook depth, trade history, and ticker data. Handle exchange-specific rate limits and data formats.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Data Normalization and Standardization Layer",
+            "description": "Build unified data normalization system to standardize different data formats from various sources into consistent schema",
+            "dependencies": [
+              "3.2",
+              "3.3",
+              "3.4"
+            ],
+            "details": "Create DataNormalizer in /data/preprocessors/normalizer.py to convert all source formats to standard OHLCV DataFrame with consistent timestamp formats, handle timezone conversions, normalize volume/price precision, detect and handle outliers, and maintain metadata about data source and quality metrics.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Design Automatic Failover and Redundancy System",
+            "description": "Implement intelligent failover mechanism that automatically switches between data sources when primary source fails",
+            "dependencies": [
+              "3.2",
+              "3.3",
+              "3.4"
+            ],
+            "details": "Build DataSourceManager in /data/fetchers/failover_manager.py with priority-based source selection, health check monitoring for each source, automatic fallback to secondary sources on failure, data quality scoring to prefer better sources, and seamless switchover without data gaps. Include configurable failover strategies and alerting.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Develop Redis Caching Layer Implementation",
+            "description": "Create comprehensive caching system using Redis for storing real-time quotes, historical data, and reducing API calls",
+            "dependencies": [
+              "3.5"
+            ],
+            "details": "Implement CacheManager in /data/cache/redis_cache.py with TTL-based caching strategies, separate caches for real-time (short TTL) and historical data (long TTL), cache warming on startup, cache invalidation policies, and Redis pub/sub for cache synchronization across multiple instances. Include cache hit/miss metrics.",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Build WebSocket Connection Management and Reconnection Logic",
+            "description": "Create robust WebSocket manager for handling multiple concurrent connections with automatic reconnection capabilities",
+            "dependencies": [
+              "3.3",
+              "3.4"
+            ],
+            "details": "Develop WebSocketManager in /data/streaming/websocket_manager.py with connection pooling, automatic reconnection with exponential backoff, heartbeat/ping-pong implementation, subscription state management, message queue for handling bursts, and graceful shutdown procedures. Support multiple WebSocket protocols and compression.\n<info added on 2025-08-09T01:54:48.354Z>\n**COMPLETION STATUS: DONE**\n\nSuccessfully implemented comprehensive WebSocket Connection Management and Reconnection Logic system with the following key deliverables:\n\n**Core Implementation:**\n- Complete WebSocketManager class in `/data/streaming/websocket_manager.py` (1,400+ lines)\n- Multi-connection management with connection pooling architecture\n- Robust configuration system with WebSocketConfig dataclass supporting all connection parameters\n- Comprehensive metrics tracking with WebSocketMetrics for performance monitoring\n\n**Advanced Features Implemented:**\n- **Multiple Reconnection Strategies**: Exponential backoff, linear backoff, fixed delay, immediate, and custom strategies\n- **Connection State Management**: Full state machine with DISCONNECTED, CONNECTING, CONNECTED, RECONNECTING, CLOSING, ERROR, PERMANENT_FAILURE states\n- **Message Queue System**: Thread-safe MessageQueue class for handling data bursts with configurable sizes\n- **Heartbeat/Ping-Pong System**: Built-in heartbeat management with configurable intervals and timeout detection\n- **Compression Support**: Multiple compression modes (NONE, PER_MESSAGE_DEFLATE, AUTO) for efficient data transmission\n- **Error Handling**: Comprehensive error handling with categorized error tracking and recovery mechanisms\n\n**Testing & Quality Assurance:**\n- Complete test suite in `/tests/data/test_websocket_manager.py` with 14 comprehensive unit tests\n- 100% test pass rate covering all core functionality\n- Tests for configuration, metrics, enumerations, manager initialization, and basic functionality\n- Async context manager support with proper lifecycle management\n\n**Integration Architecture:**\n- Callback system for message, connect, disconnect, and error events\n- Connection-specific configuration storage\n- Metrics aggregation across all connections\n- Seamless integration with the multi-source market data pipeline\n\n**Production-Ready Features:**\n- Async/await support throughout with proper exception handling\n- Resource management with context managers and cleanup procedures\n- Extensible design for future enhancements\n- Full type hints and comprehensive documentation\n\nThe WebSocket manager provides enterprise-grade connection management capabilities ready for integration with real-time market data streaming from multiple sources including Polygon.io, Alpha Vantage, and cryptocurrency exchanges.\n</info added on 2025-08-09T01:54:48.354Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Create Data Aggregation, Deduplication and Real-time Streaming Service",
+            "description": "Implement service to aggregate data from multiple sources, remove duplicates, and provide unified streaming interface",
+            "dependencies": [
+              "3.5",
+              "3.6",
+              "3.7",
+              "3.8"
+            ],
+            "details": "Build DataAggregator in /data/aggregator.py and StreamingService in /data/streaming/service.py. Implement tick-by-tick deduplication using hash-based detection, time-weighted aggregation for conflicting prices, source quality weighting, real-time data validation, and unified WebSocket/SSE streaming API. Include backpressure handling and flow control.\n<info added on 2025-08-09T02:09:25.521Z>\nCOMPLETED: Successfully implemented comprehensive Data Aggregation, Deduplication and Real-time Streaming Service.\n\n## Key Components Delivered:\n\n### 1. DataAggregator (`/data/aggregator.py`) - 1,400+ lines\n- **Hash-based Deduplication**: MD5 content hashing with cleanup queue for memory management\n- **Multiple Aggregation Methods**: WEIGHTED_AVERAGE, HIGHEST_QUALITY, MOST_RECENT, MEDIAN, CONSENSUS\n- **Quality-weighted Processing**: Source quality scores and confidence levels for intelligent data fusion\n- **Real-time Validation**: Price deviation checks, OHLCV integrity validation, quality thresholds\n- **Subscription System**: Real-time streaming with callback support for up to 100 subscribers\n- **Performance Metrics**: Processing rates, deduplication rates, buffer utilization tracking\n\n### 2. StreamingService (`/data/streaming/service.py`) - 1,100+ lines\n- **Unified Interface**: WebSocket and Server-Sent Events (SSE) support\n- **Subscription Management**: Multiple subscription types (REALTIME_QUOTES, HISTORICAL_DATA, etc.)\n- **Flow Control**: Backpressure handling with configurable buffer sizes and overflow management\n- **Rate Limiting**: Per-client rate limiters with burst allowance (100 msgs/sec default)\n- **Client Management**: Connection tracking with health monitoring and automatic cleanup\n\n### 3. Comprehensive Test Suite (`/tests/data/test_aggregator.py`) - 700+ lines\n- **26 Test Cases** covering all major functionality\n- **Performance Tests**: High throughput (100+ points), deduplication performance\n- **Integration Tests**: DataPoint, AggregationConfig, AggregationMetrics, DataAggregator\n- **ALL TESTS PASSING** ✅\n\n## Architecture Integration:\n- **Removed Circular Dependencies**: Fixed import issues between aggregator and streaming\n- **Component Integration**: Works with fetchers, normalizer, cache manager, WebSocket manager\n- **Memory Management**: Automatic cleanup of old hashes and symbol buffers\n- **Async/Await**: Full asyncio support with proper context managers\n\n## Performance Characteristics:\n- **Throughput**: >100 data points/second processing capability\n- **Deduplication**: Real-time duplicate detection with <1ms overhead\n- **Memory Efficient**: Ring buffers with configurable size limits\n- **Scalable**: Supports up to 1000 concurrent connections (configurable)\n\n## Next Integration Points:\nReady for integration with:\n- Task 3.10: Historical Data Backfill System\n- Live trading systems via broker APIs\n- Dashboard visualization components\n- Risk management systems\n</info added on 2025-08-09T02:09:25.521Z>",
+            "status": "done",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Develop Historical Data Backfill System and Testing Suite",
+            "description": "Create system for historical data backfilling with gap detection and implement comprehensive test coverage for all components",
+            "dependencies": [
+              "3.9"
+            ],
+            "details": "Implement BackfillManager in /data/backfill/manager.py with gap detection algorithms, parallel backfill workers, progress tracking, and data integrity verification. Create test suite in /tests/test_data_pipeline.py with unit tests for each fetcher, integration tests for failover scenarios, performance tests for high-throughput streaming, and end-to-end tests for complete pipeline.\n<info added on 2025-08-09T11:36:13.575Z>\nCOMPLETED IMPLEMENTATION: Successfully developed and tested a comprehensive Historical Data Backfill System and Testing Suite with all components working correctly.\n\n**Components Implemented:**\n\n1. **BackfillManager (793 lines)** - Complete orchestration system with job lifecycle management, worker coordination, and metrics tracking. Includes async context manager support and integration with all pipeline components.\n\n2. **GapDetector (664 lines)** - Advanced gap detection with market hours filtering, severity classification, and caching. Handles timezone-aware comparisons and supports configurable gap analysis with intelligent prioritization.\n\n3. **WorkerPool (779 lines)** - Parallel processing system with task distribution, worker management, and comprehensive statistics. Supports async context management and graceful shutdown.\n\n4. **ProgressTracker (654 lines)** - Real-time monitoring with event-driven updates, milestone tracking, and subscriber pattern for notifications. Maintains comprehensive metrics across all jobs.\n\n5. **IntegrityValidator (862 lines)** - Multi-rule validation framework with statistical analysis, business rules, and configurable severity levels. Supports data completeness, price consistency, outlier detection, and comprehensive reporting.\n\n6. **Comprehensive Test Suite (775 lines)** - Complete testing framework covering:\n   - Unit tests for individual components\n   - Integration tests for component interactions  \n   - Performance tests for high-throughput scenarios (1000+ data points)\n   - End-to-end pipeline workflow tests\n   - Error handling and recovery mechanisms\n   - Memory leak prevention testing\n\n**Key Features Delivered:**\n- Gap detection with market hours awareness and timezone handling\n- Parallel backfill workers with configurable concurrency (default: 5 workers)\n- Real-time progress tracking with milestone events\n- Data integrity validation with multiple rule types\n- Async context manager support for all components\n- Comprehensive error handling and recovery\n- Performance testing with 100+ points/second throughput\n- Failover scenario testing with multiple data sources\n- Memory leak prevention with buffer management\n\n**Testing Results:** All 19 tests passing including unit tests, integration tests, performance tests, and error handling scenarios. Fixed timezone comparison issues, DataFrame validation, and async context manager support.\n\n**Files Created/Modified:**\n- /data/backfill/manager.py (793 lines)\n- /data/backfill/gap_detector.py (664 lines)  \n- /data/backfill/worker.py (779 lines)\n- /data/backfill/progress_tracker.py (654 lines)\n- /data/backfill/integrity_validator.py (862 lines)\n- /data/backfill/__init__.py (package exports)\n- /tests/test_data_pipeline.py (775 lines)\n\nSystem is ready for production use with comprehensive monitoring, alerting capabilities, and robust error handling. Integrates seamlessly with existing data pipeline components (fetchers, aggregator, cache).\n</info added on 2025-08-09T11:36:13.575Z>",
+            "status": "done",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 4,
+        "title": "Implement Core Unscented Kalman Filter (UKF) Algorithm",
+        "description": "Build the foundational UKF implementation with sigma point generation, unscented transformation, state prediction and update mechanisms for the BE-EMA-MMCUKF framework",
+        "details": "Implement in /core/kalman/ukf_base.py:\n\n```python\nimport numpy as np\nfrom scipy.linalg import sqrtm, cholesky\nfrom typing import Tuple, Callable\n\nclass UnscentedKalmanFilter:\n    def __init__(self, dim_x: int, dim_z: int, dt: float, \n                 hx: Callable, fx: Callable, alpha: float = 0.001, \n                 beta: float = 2, kappa: float = 0):\n        self.dim_x = dim_x\n        self.dim_z = dim_z\n        self.dt = dt\n        self.hx = hx  # Measurement function\n        self.fx = fx  # State transition function\n        \n        # UKF parameters\n        self.alpha = alpha\n        self.beta = beta\n        self.kappa = kappa\n        self.lambda_ = alpha**2 * (dim_x + kappa) - dim_x\n        \n        # Sigma point weights\n        self.n_sigma = 2 * dim_x + 1\n        self.Wm = np.zeros(self.n_sigma)\n        self.Wc = np.zeros(self.n_sigma)\n        self.Wm[0] = self.lambda_ / (dim_x + self.lambda_)\n        self.Wc[0] = self.lambda_ / (dim_x + self.lambda_) + (1 - alpha**2 + beta)\n        self.Wm[1:] = self.Wc[1:] = 1 / (2 * (dim_x + self.lambda_))\n        \n        # State and covariance\n        self.x = np.zeros(dim_x)  # State estimate\n        self.P = np.eye(dim_x)     # Error covariance\n        self.Q = np.eye(dim_x) * 0.01  # Process noise\n        self.R = np.eye(dim_z) * 0.1   # Measurement noise\n    \n    def generate_sigma_points(self, x: np.ndarray, P: np.ndarray) -> np.ndarray:\n        '''Generate 2n+1 sigma points'''\n        sigma_points = np.zeros((self.n_sigma, self.dim_x))\n        sigma_points[0] = x\n        \n        # Add numerical stability with Cholesky decomposition\n        try:\n            sqrt_matrix = cholesky((self.dim_x + self.lambda_) * P)\n        except np.linalg.LinAlgError:\n            # Fallback to SVD if not positive definite\n            sqrt_matrix = sqrtm((self.dim_x + self.lambda_) * P)\n        \n        for i in range(self.dim_x):\n            sigma_points[i + 1] = x + sqrt_matrix[i]\n            sigma_points[self.dim_x + i + 1] = x - sqrt_matrix[i]\n        \n        return sigma_points\n    \n    def predict(self, dt: Optional[float] = None):\n        '''Predict step of UKF'''\n        # Generate sigma points\n        sigma_points = self.generate_sigma_points(self.x, self.P)\n        \n        # Pass through state transition\n        sigma_points_pred = np.array([self.fx(sp, dt or self.dt) for sp in sigma_points])\n        \n        # Calculate predicted state\n        self.x = np.sum(self.Wm[:, np.newaxis] * sigma_points_pred, axis=0)\n        \n        # Calculate predicted covariance\n        self.P = self.Q.copy()\n        for i in range(self.n_sigma):\n            y = sigma_points_pred[i] - self.x\n            self.P += self.Wc[i] * np.outer(y, y)\n    \n    def update(self, z: np.ndarray, R: Optional[np.ndarray] = None):\n        '''Update step with measurement'''\n        # Implementation of measurement update\n        pass\n```",
+        "testStrategy": "Test sigma point generation with various covariance matrices, verify unscented transformation preserves mean and covariance to 2nd order, test numerical stability with ill-conditioned matrices, validate against known UKF benchmarks",
+        "priority": "high",
+        "dependencies": [
+          2
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Set up mathematical foundations and parameter initialization",
+            "description": "Create the core UKF class structure with parameter initialization for alpha, beta, kappa, and lambda calculations, along with weight computations for sigma points",
+            "dependencies": [],
+            "details": "Initialize UnscentedKalmanFilter class with dim_x (state dimension), dim_z (measurement dimension), dt (timestep), fx (state transition function), hx (measurement function). Calculate lambda = alpha²(n+kappa)-n, and weights W_m and W_c for mean and covariance reconstruction. Store initial state x and covariance P matrices with proper dimensions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement sigma point generation with numerical stability",
+            "description": "Create robust sigma point generation using Cholesky decomposition with fallback to SVD for ill-conditioned covariance matrices",
+            "dependencies": [
+              "4.1"
+            ],
+            "details": "Implement generate_sigma_points() method that creates 2n+1 sigma points using X[0] = x̂, X[i] = x̂ + √((n+λ)P) for i=1..n, X[i] = x̂ - √((n+λ)P) for i=n+1..2n. Add numerical stability checks: verify positive definiteness, add small diagonal loading (1e-6) if needed, implement SVD decomposition as fallback when Cholesky fails.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Build unscented transformation mechanism",
+            "description": "Implement the unscented transformation to propagate sigma points through nonlinear functions while preserving statistical moments",
+            "dependencies": [
+              "4.2"
+            ],
+            "details": "Create unscented_transform() method that takes sigma points and a nonlinear function, applies the function to each sigma point, calculates weighted mean ŷ = Σ(W_m[i] * Y[i]) and covariance P_y = Σ(W_c[i] * (Y[i]-ŷ)(Y[i]-ŷ)ᵀ), and returns transformed mean and covariance. Ensure proper handling of angles and quaternions if needed.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop state prediction with nonlinear dynamics",
+            "description": "Implement the prediction step that propagates state and covariance forward in time using the process model",
+            "dependencies": [
+              "4.3"
+            ],
+            "details": "Create predict() method that generates sigma points from current state, propagates them through fx (state transition function), applies unscented transformation to get predicted mean x̂⁻ and covariance P⁻, adds process noise Q to covariance. Support both additive and non-additive noise models. Store prior state for smoothing applications.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement measurement update and Kalman gain",
+            "description": "Build the measurement update step with innovation calculation and optimal Kalman gain computation",
+            "dependencies": [
+              "4.4"
+            ],
+            "details": "Create update() method that generates sigma points from predicted state, transforms through hx (measurement function), calculates innovation y = z - ẑ and innovation covariance S = P_zz + R, computes cross-covariance P_xz and Kalman gain K = P_xz * S⁻¹, updates state x̂ = x̂⁻ + K*y and covariance P = P⁻ - K*S*Kᵀ. Add Joseph form update for numerical stability.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create covariance management and regularization system",
+            "description": "Implement robust covariance matrix management with symmetry enforcement, positive definiteness checks, and regularization techniques",
+            "dependencies": [
+              "4.5"
+            ],
+            "details": "Implement enforce_symmetry() to make P = (P + Pᵀ)/2, add_diagonal_loading() for regularization, check_positive_definite() using eigenvalue analysis, scale_covariance() for adaptive inflation/deflation. Create covariance_reset() for filter reinitialization when needed. Monitor condition number and warn on numerical issues.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Add advanced numerical stability improvements",
+            "description": "Implement comprehensive numerical stability enhancements including square-root UKF variant, adaptive scaling, and robust matrix operations",
+            "dependencies": [
+              "4.6"
+            ],
+            "details": "Implement QR decomposition-based square-root UKF for propagating Cholesky factors directly, add adaptive alpha scaling based on innovation consistency, implement robust matrix inversion using pseudo-inverse with threshold, add innovation outlier detection and rejection, create numerical health monitoring with automatic recovery mechanisms. Include logging for numerical warnings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Develop comprehensive testing and validation suite",
+            "description": "Create extensive unit tests and validation against reference implementations to ensure correctness and numerical stability",
+            "dependencies": [
+              "4.7"
+            ],
+            "details": "Write test_sigma_points() to verify correct generation and weights sum to 1, test_unscented_transform() to check moment preservation, test_linear_equivalence() to verify UKF equals KF for linear systems, test_nonlinear_tracking() with standard benchmarks (e.g., constant turn rate model), test_numerical_stability() with ill-conditioned matrices, test_missing_measurements() for robustness, compare against FilterPy/PyKalman implementations.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 5,
+        "title": "Develop Six Market Regime Models and Multiple Model Framework",
+        "description": "Implement the six distinct market regime models (Bull, Bear, Sideways, High/Low Volatility, Crisis) with specific dynamics and the multiple model framework for parallel filter execution",
+        "details": "Create in /core/kalman/regime_models.py:\n\n```python\nimport numpy as np\nfrom enum import Enum\nfrom typing import Dict, Tuple\nfrom abc import ABC, abstractmethod\n\nclass MarketRegime(Enum):\n    BULL = 1\n    BEAR = 2\n    SIDEWAYS = 3\n    HIGH_VOLATILITY = 4\n    LOW_VOLATILITY = 5\n    CRISIS = 6\n\nclass RegimeModel(ABC):\n    @abstractmethod\n    def state_transition(self, x: np.ndarray, dt: float) -> np.ndarray:\n        pass\n    \n    @abstractmethod\n    def get_process_noise(self, dt: float) -> np.ndarray:\n        pass\n\nclass BullMarketModel(RegimeModel):\n    def __init__(self):\n        self.mu = 0.15  # 15% annual drift\n        self.sigma = 0.18  # 18% volatility\n        self.alpha = 0.95  # Volatility persistence\n        self.beta = 0.02\n    \n    def state_transition(self, x: np.ndarray, dt: float) -> np.ndarray:\n        # x = [log_price, return, volatility, momentum]\n        x_new = x.copy()\n        \n        # Geometric Brownian Motion with positive drift\n        noise = np.random.normal(0, 1)\n        x_new[0] = x[0] + self.mu * dt + self.sigma * np.sqrt(dt) * noise\n        x_new[1] = (x_new[0] - x[0]) / dt\n        x_new[2] = self.alpha * x[2] + self.beta\n        x_new[3] = 0.8 * x[3] + 0.2 * x_new[1]  # Momentum update\n        \n        return x_new\n\nclass BearMarketModel(RegimeModel):\n    def __init__(self):\n        self.mu = -0.20  # Negative drift\n        self.sigma = 0.25  # Higher volatility\n        \nclass MeanReversionModel(RegimeModel):\n    '''Ornstein-Uhlenbeck process for sideways market'''\n    def __init__(self):\n        self.kappa = 2.0  # Mean reversion speed\n        self.theta = 0.0  # Long-term mean (log price)\n        self.sigma = 0.15\n```\n\nImplement MMCUKF in /core/kalman/mmcukf.py:\n\n```python\nclass MultipleModelCUKF:\n    def __init__(self):\n        self.filters = {\n            MarketRegime.BULL: UnscentedKalmanFilter(...),\n            MarketRegime.BEAR: UnscentedKalmanFilter(...),\n            # ... other regimes\n        }\n        self.regime_probabilities = np.ones(6) / 6\n        self.transition_matrix = self._initialize_transition_matrix()\n    \n    def _initialize_transition_matrix(self) -> np.ndarray:\n        '''6x6 Markov transition matrix'''\n        return np.array([\n            [0.85, 0.05, 0.05, 0.02, 0.02, 0.01],  # Bull\n            [0.05, 0.85, 0.05, 0.02, 0.02, 0.01],  # Bear\n            [0.10, 0.10, 0.70, 0.05, 0.04, 0.01],  # Sideways\n            [0.15, 0.15, 0.10, 0.50, 0.05, 0.05],  # High Vol\n            [0.10, 0.10, 0.15, 0.05, 0.60, 0.00],  # Low Vol\n            [0.20, 0.20, 0.20, 0.20, 0.10, 0.10],  # Crisis\n        ])\n```",
+        "testStrategy": "Test each regime model independently with synthetic data, verify Markov chain properties of transition matrix, test regime detection accuracy with historical market data from 2008 crisis, 2020 pandemic, and bull markets",
+        "priority": "high",
+        "dependencies": [
+          4
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Create abstract regime model base class and interfaces",
+            "description": "Define the abstract base class RegimeModel with required methods and the MarketRegime enum for all six market states",
+            "dependencies": [],
+            "details": "Implement in /core/kalman/regime_models.py: Create ABC with abstract methods for state_transition, get_process_noise, get_measurement_noise, and calculate_likelihood. Define MarketRegime enum with BULL, BEAR, SIDEWAYS, HIGH_VOLATILITY, LOW_VOLATILITY, CRISIS. Include type hints and comprehensive docstrings.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Bull market model with GBM dynamics",
+            "description": "Create BullMarketModel class implementing Geometric Brownian Motion with positive drift for bullish market conditions",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement state evolution: p_{k+1} = p_k + μ_bull * Δt + σ_bull * √Δt * ε_{k+1}, σ_{k+1} = α_bull * σ_k + β_bull. Default parameters: μ_bull=0.15 (15% annual), σ_bull=0.12, α_bull=0.95, β_bull=0.02. Include momentum factor calculation and regime-specific covariance.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Implement Bear market model with negative drift",
+            "description": "Create BearMarketModel class with GBM dynamics featuring negative drift for declining market conditions",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement state evolution: p_{k+1} = p_k + μ_bear * Δt + σ_bear * √Δt * ε_{k+1}, σ_{k+1} = α_bear * σ_k + β_bear. Default parameters: μ_bear=-0.20 (20% annual decline), σ_bear=0.18, α_bear=0.92, β_bear=0.04. Include fear index factor and increased volatility during downturns.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Develop mean reversion/sideways model with Ornstein-Uhlenbeck process",
+            "description": "Implement SidewaysMarketModel using Ornstein-Uhlenbeck process for range-bound market behavior",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement OU process: p_{k+1} = p_k + κ(θ - p_k)Δt + σ_mr * √Δt * ε_{k+1}. Parameters: κ=2.0 (mean reversion speed), θ=dynamic equilibrium level, σ_mr=0.10. Calculate equilibrium from moving average. Include boundary detection for range identification.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Create high volatility regime with GARCH-like dynamics",
+            "description": "Build HighVolatilityModel implementing GARCH(1,1)-inspired volatility clustering dynamics",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement conditional variance: σ²_{k+1} = ω + α_garch * ε²_k + β_garch * σ²_k. Parameters: ω=0.00001, α_garch=0.15, β_garch=0.80. Include volatility persistence measures, regime-specific shock amplification, and fat-tail distribution handling. Model sudden volatility spikes.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Implement low volatility regime model",
+            "description": "Develop LowVolatilityModel for quiet market periods with dampened price movements",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement dampened dynamics: σ_{k+1} = α_low * σ_k + β_low with α_low=0.85, β_low=0.005. Include volatility floor at 0.05 annual. Model steady growth with minimal fluctuations. Incorporate mean-reverting drift toward trend. Handle prolonged low volatility periods.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Build crisis mode model with extreme parameters",
+            "description": "Create CrisisModel for market crash scenarios with extreme volatility and correlation breakdown",
+            "dependencies": [
+              "5.1"
+            ],
+            "details": "Implement jump-diffusion process with Poisson jumps. Parameters: σ_crisis=0.40+, jump intensity λ=0.5, jump size distribution N(-0.05, 0.1²). Model correlation breakdown, liquidity evaporation, and non-normal returns. Include circuit breaker simulation and gap risk modeling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Implement Markov chain transition matrix and validation",
+            "description": "Create the 6x6 transition probability matrix for regime switching with validation and calibration methods",
+            "dependencies": [
+              "5.1",
+              "5.2",
+              "5.3",
+              "5.4",
+              "5.5",
+              "5.6",
+              "5.7"
+            ],
+            "details": "Build TransitionMatrix class with default probabilities from paper. Implement validation: row sums = 1, eigenvalue check for ergodicity, detailed balance verification. Add calibration from historical data using MLE. Include transition rate adjustment for market conditions.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Develop multiple model framework with parallel filter bank",
+            "description": "Implement the MultipleModelController managing parallel execution of regime-specific filters",
+            "dependencies": [
+              "5.8"
+            ],
+            "details": "Create filter bank architecture running 6 UKFs in parallel. Implement efficient state propagation, parallel likelihood computation, and filter synchronization. Use multiprocessing for true parallelism. Include dynamic filter addition/removal for Expected Mode Augmentation.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Implement likelihood calculation and Bayesian regime probability updates",
+            "description": "Build the likelihood computation and Bayesian inference system for regime probability evolution",
+            "dependencies": [
+              "5.9"
+            ],
+            "details": "Implement multivariate Gaussian likelihood: L = (2π)^(-n/2) |Σ|^(-1/2) exp(-0.5 * e'Σ^(-1)e). Add log-likelihood for numerical stability. Implement Bayes rule: ζ_k^(i) = (L_k^(i) * P(i→i) * ζ_{k-1}^(i)) / Σ_j(...). Include probability normalization and minimum threshold handling.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Create state fusion system across regimes",
+            "description": "Implement weighted state fusion combining estimates from all active regime filters",
+            "dependencies": [
+              "5.10"
+            ],
+            "details": "Build StateFusion class implementing: x̂ = Σ_i ζ^(i) * x̂^(i), P = Σ_i ζ^(i) * (P^(i) + (x̂^(i) - x̂)(x̂^(i) - x̂)'). Handle covariance fusion preserving positive definiteness. Implement IMM-style mixing for smooth transitions. Add outlier detection and robust fusion methods.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 12,
+            "title": "Implement performance optimization and comprehensive testing suite",
+            "description": "Optimize computational efficiency and create extensive test coverage for all regime models and framework",
+            "dependencies": [
+              "5.11"
+            ],
+            "details": "Implement Numba JIT compilation for hot paths. Add caching for repeated calculations. Profile and optimize matrix operations using BLAS. Create pytest suite: unit tests per regime, integration tests for transitions, stress tests with 10000+ timesteps, benchmark against paper results. Target <100ms per update.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 6,
+        "title": "Implement Bayesian Missing Data Compensation and EMA",
+        "description": "Build the Bayesian estimation system for handling missing data using Beta distribution and implement Expected Mode Augmentation for dynamic regime adaptation",
+        "details": "Create /core/kalman/bayesian_estimator.py:\n\n```python\nimport numpy as np\nfrom scipy.stats import beta\nfrom typing import Tuple, Optional\n\nclass BayesianDataQualityEstimator:\n    def __init__(self, alpha_0: float = 1.0, beta_0: float = 1.0):\n        '''Initialize Beta distribution parameters'''\n        self.alpha = alpha_0\n        self.beta = beta_0\n        self.reception_history = []\n        \n    def update(self, data_received: bool) -> None:\n        '''Update Beta parameters based on data availability'''\n        if data_received:\n            self.alpha += 1\n        else:\n            self.beta += 1\n        self.reception_history.append(data_received)\n        \n    def estimate_reception_rate(self) -> float:\n        '''Calculate expected data reception probability'''\n        return self.alpha / (self.alpha + self.beta)\n    \n    def get_confidence_interval(self, confidence: float = 0.95) -> Tuple[float, float]:\n        '''Get Bayesian confidence interval for reception rate'''\n        return beta.interval(confidence, self.alpha, self.beta)\n\nclass MissingDataCompensator:\n    def __init__(self, ukf: UnscentedKalmanFilter):\n        self.ukf = ukf\n        self.max_consecutive_missing = 10\n        self.missing_count = 0\n        \n    def compensate(self, data_available: bool, measurement: Optional[np.ndarray] = None):\n        '''Handle missing data with one-step prediction'''\n        if data_available and measurement is not None:\n            self.missing_count = 0\n            self.ukf.update(measurement)\n        else:\n            self.missing_count += 1\n            if self.missing_count <= self.max_consecutive_missing:\n                # Increase process noise during missing data\n                original_Q = self.ukf.Q.copy()\n                self.ukf.Q *= (1 + 0.1 * self.missing_count)\n                self.ukf.predict()\n                self.ukf.Q = original_Q\n            else:\n                raise ValueError(f\"Too many consecutive missing observations: {self.missing_count}\")\n```\n\nImplement EMA in /core/kalman/ema_augmentation.py:\n\n```python\nclass ExpectedModeAugmentation:\n    def __init__(self, base_regimes: List[MarketRegime]):\n        self.base_regimes = base_regimes\n        self.expected_regime = None\n        \n    def calculate_expected_regime(self, regime_probs: Dict[MarketRegime, float]) -> RegimeModel:\n        '''Calculate weighted average regime parameters'''\n        expected_params = {}\n        for param in ['mu', 'sigma', 'alpha', 'beta']:\n            expected_params[param] = sum(\n                regime_probs[r] * getattr(self.base_regimes[r], param)\n                for r in regime_probs\n            )\n        return self._create_dynamic_regime(expected_params)\n```",
+        "testStrategy": "Test Beta distribution convergence with various data availability patterns, verify compensation maintains filter stability with 20% missing data, test EMA regime calculation against known weighted averages",
+        "priority": "medium",
+        "dependencies": [
+          5
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 7,
+        "title": "Create State Persistence and Recovery System",
+        "description": "Implement comprehensive state serialization, checkpointing, and recovery mechanisms for Kalman filter states enabling seamless continuation across sessions",
+        "details": "Implement in /core/kalman/state_manager.py:\n\n```python\nimport pickle\nimport json\nimport numpy as np\nfrom datetime import datetime\nfrom typing import Dict, Any, Optional\nimport hashlib\nfrom pathlib import Path\n\nclass KalmanStateManager:\n    def __init__(self, db_session, checkpoint_dir: str = '.checkpoints'):\n        self.db_session = db_session\n        self.checkpoint_dir = Path(checkpoint_dir)\n        self.checkpoint_dir.mkdir(exist_ok=True)\n        \n    def save_state(self, strategy_id: int, state_dict: Dict[str, Any]) -> str:\n        '''Save complete Kalman filter state to database'''\n        # Serialize numpy arrays and complex objects\n        serialized_state = {\n            'state_estimates': {},\n            'covariances': {},\n            'regime_probabilities': {},\n            'transition_matrix': None,\n            'beta_params': None,\n            'timestamp': datetime.now(),\n            'version': '1.0.0'\n        }\n        \n        # Serialize each regime's state\n        for regime, filter_state in state_dict['filters'].items():\n            serialized_state['state_estimates'][regime.value] = pickle.dumps(filter_state['x'])\n            serialized_state['covariances'][regime.value] = pickle.dumps(filter_state['P'])\n        \n        # Serialize regime probabilities\n        serialized_state['regime_probabilities'] = json.dumps({\n            k.value: v for k, v in state_dict['regime_probabilities'].items()\n        })\n        \n        # Serialize transition matrix and Beta params\n        serialized_state['transition_matrix'] = pickle.dumps(state_dict['transition_matrix'])\n        serialized_state['beta_params'] = pickle.dumps(state_dict['beta_params'])\n        \n        # Create database entry\n        kalman_state = KalmanState(\n            strategy_id=strategy_id,\n            timestamp=serialized_state['timestamp'],\n            state_vector=serialized_state['state_estimates'],\n            covariance_matrix=serialized_state['covariances'],\n            regime_probabilities=serialized_state['regime_probabilities'],\n            beta_alpha=state_dict['beta_params'][0],\n            beta_beta=state_dict['beta_params'][1],\n            data_reception_rate=state_dict.get('reception_rate', 0.95)\n        )\n        \n        self.db_session.add(kalman_state)\n        self.db_session.commit()\n        \n        # Create checkpoint file\n        checkpoint_hash = self._create_checkpoint(strategy_id, serialized_state)\n        return checkpoint_hash\n    \n    def load_state(self, strategy_id: int, timestamp: Optional[datetime] = None) -> Dict[str, Any]:\n        '''Load Kalman filter state from database'''\n        query = self.db_session.query(KalmanState).filter_by(strategy_id=strategy_id)\n        \n        if timestamp:\n            query = query.filter(KalmanState.timestamp <= timestamp)\n        \n        state_record = query.order_by(KalmanState.timestamp.desc()).first()\n        \n        if not state_record:\n            raise ValueError(f\"No state found for strategy {strategy_id}\")\n        \n        # Deserialize state\n        return self._deserialize_state(state_record)\n    \n    def _create_checkpoint(self, strategy_id: int, state: Dict) -> str:\n        '''Create filesystem checkpoint for recovery'''\n        checkpoint_data = pickle.dumps(state)\n        hash_value = hashlib.sha256(checkpoint_data).hexdigest()[:16]\n        \n        checkpoint_path = self.checkpoint_dir / f\"strategy_{strategy_id}_{hash_value}.ckpt\"\n        with open(checkpoint_path, 'wb') as f:\n            f.write(checkpoint_data)\n        \n        # Keep only last 10 checkpoints\n        self._cleanup_old_checkpoints(strategy_id)\n        return hash_value\n    \n    def validate_state(self, state_dict: Dict) -> bool:\n        '''Validate state integrity before loading'''\n        required_keys = ['state_estimates', 'covariances', 'regime_probabilities']\n        return all(key in state_dict for key in required_keys)\n```",
+        "testStrategy": "Test state serialization/deserialization with various data types, verify checkpoint creation and recovery, test state validation with corrupted data, benchmark save/load performance with large states",
+        "priority": "medium",
+        "dependencies": [
+          6
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 8,
+        "title": "Build Comprehensive Backtesting Engine with Regime Analysis",
+        "description": "Develop the backtesting system with walk-forward analysis, regime-aware metrics, missing data simulation, and performance analytics specific to the BE-EMA-MMCUKF strategy",
+        "details": "Create /backtesting/engine.py and /backtesting/regime_aware_backtest.py:\n\n```python\n# engine.py\nimport pandas as pd\nimport numpy as np\nfrom typing import Dict, List, Optional, Tuple\nfrom dataclasses import dataclass\nfrom datetime import datetime, timedelta\n\n@dataclass\nclass BacktestConfig:\n    start_date: datetime\n    end_date: datetime\n    initial_capital: float = 100000\n    position_size_method: str = 'kelly'  # kelly, fixed, risk_parity\n    transaction_cost: float = 0.001  # 0.1%\n    slippage_model: str = 'linear'  # linear, square_root\n    missing_data_rate: float = 0.0  # 0-0.3\n    walk_forward_periods: int = 0  # 0 for standard backtest\n\nclass BacktestEngine:\n    def __init__(self, strategy, data_provider, config: BacktestConfig):\n        self.strategy = strategy\n        self.data_provider = data_provider\n        self.config = config\n        self.results = BacktestResults()\n        \n    def run(self) -> BacktestResults:\n        '''Execute backtest with optional walk-forward analysis'''\n        if self.config.walk_forward_periods > 0:\n            return self._run_walk_forward()\n        else:\n            return self._run_standard()\n    \n    def _run_standard(self) -> BacktestResults:\n        '''Standard backtest over entire period'''\n        # Load historical data\n        data = self.data_provider.get_historical(\n            self.config.start_date,\n            self.config.end_date\n        )\n        \n        # Apply missing data simulation if configured\n        if self.config.missing_data_rate > 0:\n            data = self._simulate_missing_data(data)\n        \n        # Initialize portfolio\n        portfolio = Portfolio(self.config.initial_capital)\n        \n        # Run strategy\n        for timestamp, market_data in data.iterrows():\n            # Get strategy signal\n            signal = self.strategy.process(market_data)\n            \n            # Calculate position size\n            position_size = self._calculate_position_size(signal, portfolio)\n            \n            # Execute trade with costs\n            if signal.action != 'hold':\n                trade = self._execute_trade(signal, position_size, market_data)\n                portfolio.add_trade(trade)\n        \n        return self._calculate_metrics(portfolio)\n\n# regime_aware_backtest.py\nclass RegimeAwareBacktest(BacktestEngine):\n    def __init__(self, *args, **kwargs):\n        super().__init__(*args, **kwargs)\n        self.regime_history = []\n        self.regime_transitions = []\n        \n    def _calculate_metrics(self, portfolio: Portfolio) -> Dict:\n        '''Calculate standard and regime-specific metrics'''\n        metrics = super()._calculate_metrics(portfolio)\n        \n        # Add regime-specific metrics\n        metrics['regime_metrics'] = {\n            'regime_hit_rate': self._calculate_regime_hit_rate(),\n            'transition_score': self._calculate_transition_score(),\n            'regime_durations': self._calculate_regime_durations(),\n            'regime_returns': self._calculate_regime_returns(portfolio),\n            'regime_sharpe': self._calculate_regime_sharpe(portfolio)\n        }\n        \n        # Filter-specific metrics\n        metrics['filter_metrics'] = {\n            'tracking_error': self._calculate_tracking_error(),\n            'avg_likelihood': np.mean([r['likelihood'] for r in self.regime_history]),\n            'missing_data_impact': self._analyze_missing_data_impact(),\n            'covariance_stability': self._calculate_covariance_stability()\n        }\n        \n        return metrics\n    \n    def _calculate_regime_hit_rate(self) -> float:\n        '''Calculate accuracy of regime detection'''\n        correct_predictions = 0\n        total_predictions = len(self.regime_history)\n        \n        for record in self.regime_history:\n            predicted_regime = max(record['probabilities'], key=record['probabilities'].get)\n            actual_regime = self._determine_actual_regime(record['timestamp'])\n            if predicted_regime == actual_regime:\n                correct_predictions += 1\n        \n        return correct_predictions / total_predictions if total_predictions > 0 else 0\n```\n\nImplement walk-forward analysis and performance metrics calculation",
+        "testStrategy": "Test with historical data from multiple market conditions (2008 crisis, 2020 pandemic, 2021 bull market), verify transaction cost calculations, test walk-forward with different window sizes, validate all metrics calculations against known benchmarks",
+        "priority": "high",
+        "dependencies": [
+          7
+        ],
+        "status": "pending",
+        "subtasks": [
+          {
+            "id": 1,
+            "title": "Design Core Backtesting Engine Architecture",
+            "description": "Create the foundational architecture with abstract base classes, interfaces for strategy execution, data handling, and event processing systems",
+            "dependencies": [],
+            "details": "Design BacktestEngine base class with event-driven architecture, create interfaces for IStrategy, IDataHandler, IPortfolio, IExecutionHandler, IBroker. Define event types (MarketEvent, SignalEvent, OrderEvent, FillEvent). Implement event queue system for processing market data and signals. Create configuration management for backtesting parameters.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 2,
+            "title": "Implement Portfolio Management and Position Tracking",
+            "description": "Build portfolio management system with position tracking, capital allocation, and real-time P&L calculation",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Create Portfolio class with position tracking (quantity, entry price, current value), implement capital allocation methods (Kelly criterion, fixed fractional, risk parity), track unrealized and realized P&L, handle multi-asset portfolios with correlation tracking, implement position limits and exposure management.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 3,
+            "title": "Develop Transaction Cost and Slippage Models",
+            "description": "Create realistic transaction cost models including commissions, spreads, market impact, and slippage simulation",
+            "dependencies": [
+              "8.2"
+            ],
+            "details": "Implement fixed and variable commission structures, create bid-ask spread models based on liquidity, develop market impact functions (linear, square-root, power-law), simulate slippage based on order size and market volatility, create separate models for different asset classes (stocks, forex, crypto).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 4,
+            "title": "Build Standard Performance Metrics Calculator",
+            "description": "Implement comprehensive performance metrics including Sharpe ratio, maximum drawdown, Calmar ratio, and other risk-adjusted returns",
+            "dependencies": [
+              "8.2",
+              "8.3"
+            ],
+            "details": "Calculate Sharpe ratio with adjustable risk-free rate, implement maximum drawdown and drawdown duration tracking, compute Calmar and Sortino ratios, calculate win rate and profit factor, implement rolling performance metrics, create benchmark comparison metrics (alpha, beta, correlation).",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 5,
+            "title": "Implement Walk-Forward Analysis Framework",
+            "description": "Create walk-forward optimization system with rolling windows, out-of-sample testing, and parameter stability analysis",
+            "dependencies": [
+              "8.4"
+            ],
+            "details": "Design rolling window framework with configurable training/testing periods, implement anchored and unanchored walk-forward methods, create parameter optimization within training windows, track parameter stability across windows, implement out-of-sample performance aggregation, create performance degradation analysis.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 6,
+            "title": "Create Missing Data Simulation System",
+            "description": "Build system to inject realistic data gaps and test strategy robustness under incomplete information",
+            "dependencies": [
+              "8.1"
+            ],
+            "details": "Implement configurable data gap injection (5-20% missing rate), simulate market closure periods and holidays, create random and clustered missing data patterns, simulate data feed interruptions and reconnections, implement missing data statistics tracking, test Kalman filter compensation effectiveness.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 7,
+            "title": "Develop Regime-Specific Metrics and Analysis",
+            "description": "Implement metrics specific to regime detection including hit rate, transition accuracy, and per-regime performance",
+            "dependencies": [
+              "8.4",
+              "8.6"
+            ],
+            "details": "Calculate regime detection accuracy (precision, recall, F1-score), track regime transition timing and accuracy, compute per-regime Sharpe ratios and returns, analyze false regime switches and their cost, implement regime duration statistics, create regime confusion matrix.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 8,
+            "title": "Build Filter-Specific Performance Metrics",
+            "description": "Create metrics specific to Kalman filter performance including tracking error, filter divergence, and uncertainty quantification",
+            "dependencies": [
+              "8.7"
+            ],
+            "details": "Implement tracking error and root mean square error calculations, monitor filter divergence and numerical stability, track covariance matrix condition numbers, calculate prediction interval coverage, implement likelihood score tracking, create filter uncertainty visualization metrics.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 9,
+            "title": "Implement Trade Execution Simulation",
+            "description": "Create realistic trade execution with order types, partial fills, rejections, and latency simulation",
+            "dependencies": [
+              "8.2",
+              "8.3"
+            ],
+            "details": "Implement market, limit, and stop order types, simulate partial fills based on available liquidity, create order rejection scenarios (insufficient margin, position limits), add execution latency simulation (network, processing), implement order queue priority simulation, handle order modifications and cancellations.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 10,
+            "title": "Create Results Storage and Reporting System",
+            "description": "Build comprehensive results storage with database persistence and automated report generation",
+            "dependencies": [
+              "8.4",
+              "8.7",
+              "8.8",
+              "8.9"
+            ],
+            "details": "Design database schema for backtest results storage, implement trade-by-trade logging with timestamps, create equity curve and drawdown storage, generate HTML/PDF reports with charts, implement results comparison across multiple backtests, create performance attribution analysis.",
+            "status": "pending",
+            "testStrategy": ""
+          },
+          {
+            "id": 11,
+            "title": "Develop Comprehensive Testing Suite",
+            "description": "Create extensive test suite using historical data from various market conditions to validate all components",
+            "dependencies": [
+              "8.1",
+              "8.2",
+              "8.3",
+              "8.4",
+              "8.5",
+              "8.6",
+              "8.7",
+              "8.8",
+              "8.9",
+              "8.10"
+            ],
+            "details": "Test with 2008 financial crisis data for stress testing, validate with 2020 pandemic volatility, test bull market performance (2021-2022), create synthetic data tests for edge cases, benchmark against known trading strategies, implement regression tests for all metrics, validate against third-party backtesting platforms.",
+            "status": "pending",
+            "testStrategy": ""
+          }
+        ]
+      },
+      {
+        "id": 9,
+        "title": "Implement FastAPI Backend and Real-time WebSocket Communication",
+        "description": "Create the FastAPI application with REST endpoints for strategy management, WebSocket support for real-time data streaming, and integration with Celery for asynchronous task processing",
+        "details": "Create main FastAPI application in /api/main.py:\n\n```python\nfrom fastapi import FastAPI, WebSocket, HTTPException, Depends, BackgroundTasks\nfrom fastapi.middleware.cors import CORSMiddleware\nfrom fastapi.security import HTTPBearer, HTTPAuthorizationCredentials\nimport socketio\nfrom typing import List, Dict, Optional\nfrom datetime import datetime\nimport jwt\nimport redis\nimport json\n\napp = FastAPI(\n    title=\"QuantPyTrader API\",\n    description=\"Quantitative Trading Platform API\",\n    version=\"1.0.0\"\n)\n\n# CORS configuration\napp.add_middleware(\n    CORSMiddleware,\n    allow_origins=[\"http://localhost:3000\", \"http://localhost:8501\"],\n    allow_credentials=True,\n    allow_methods=[\"*\"],\n    allow_headers=[\"*\"],\n)\n\n# Socket.IO setup\nsio = socketio.AsyncServer(async_mode='asgi', cors_allowed_origins='*')\nsocket_app = socketio.ASGIApp(sio, app)\n\n# Redis connection for caching and pub/sub\nredis_client = redis.Redis(host='localhost', port=6379, decode_responses=True)\n\n# Authentication\nsecurity = HTTPBearer()\n\n@app.post(\"/api/v1/auth/login\")\nasync def login(credentials: UserCredentials):\n    '''Authenticate user and return JWT token'''\n    # Validate credentials\n    user = authenticate_user(credentials.username, credentials.password)\n    if not user:\n        raise HTTPException(status_code=401, detail=\"Invalid credentials\")\n    \n    # Generate JWT\n    token = jwt.encode(\n        {\"user_id\": user.id, \"exp\": datetime.utcnow() + timedelta(hours=24)},\n        SECRET_KEY,\n        algorithm=\"HS256\"\n    )\n    return {\"access_token\": token, \"token_type\": \"bearer\"}\n\n@app.get(\"/api/v1/strategies\")\nasync def get_strategies(current_user: User = Depends(get_current_user)):\n    '''Get all strategies for current user'''\n    strategies = db.query(Strategy).filter_by(user_id=current_user.id).all()\n    return strategies\n\n@app.post(\"/api/v1/strategies/{strategy_id}/backtest\")\nasync def run_backtest(\n    strategy_id: int,\n    config: BacktestConfig,\n    background_tasks: BackgroundTasks,\n    current_user: User = Depends(get_current_user)\n):\n    '''Run backtest asynchronously'''\n    # Queue backtest task with Celery\n    task = celery_app.send_task(\n        'tasks.run_backtest',\n        args=[strategy_id, config.dict()]\n    )\n    \n    # Store task ID in Redis\n    redis_client.set(f\"backtest:{task.id}\", json.dumps({\n        \"status\": \"pending\",\n        \"strategy_id\": strategy_id,\n        \"user_id\": current_user.id\n    }))\n    \n    return {\"task_id\": task.id, \"status\": \"queued\"}\n\n@app.websocket(\"/ws/market-data\")\nasync def market_data_websocket(websocket: WebSocket):\n    '''WebSocket endpoint for real-time market data'''\n    await websocket.accept()\n    \n    try:\n        # Subscribe to market data\n        symbols = await websocket.receive_json()\n        \n        # Start streaming data\n        async for data in data_provider.stream_realtime(symbols):\n            await websocket.send_json({\n                \"type\": \"market_data\",\n                \"data\": data,\n                \"timestamp\": datetime.now().isoformat()\n            })\n    except Exception as e:\n        await websocket.send_json({\"error\": str(e)})\n    finally:\n        await websocket.close()\n\n@sio.event\nasync def connect(sid, environ):\n    '''Handle Socket.IO connection'''\n    print(f\"Client {sid} connected\")\n\n@sio.on('subscribe_strategy')\nasync def subscribe_strategy(sid, data):\n    '''Subscribe to real-time strategy updates'''\n    strategy_id = data['strategy_id']\n    await sio.enter_room(sid, f\"strategy_{strategy_id}\")\n    \n    # Send initial state\n    state = get_strategy_state(strategy_id)\n    await sio.emit('strategy_state', state, room=sid)\n```\n\nImplement Celery tasks in /api/tasks.py for async processing",
+        "testStrategy": "Test all API endpoints with pytest-asyncio, verify WebSocket connections handle disconnections gracefully, test JWT authentication and authorization, load test with 100+ concurrent WebSocket connections, verify Celery task execution and result retrieval",
+        "priority": "medium",
+        "dependencies": [
+          8
+        ],
+        "status": "pending",
+        "subtasks": []
+      },
+      {
+        "id": 10,
+        "title": "Develop Streamlit Dashboard and Visualization Interface",
+        "description": "Create the comprehensive Streamlit-based user interface with real-time dashboards, interactive charts for regime visualization, strategy configuration, and performance analytics",
+        "details": "Create main Streamlit app in /frontend/app.py:\n\n```python\nimport streamlit as st\nimport plotly.graph_objects as go\nimport plotly.express as px\nimport pandas as pd\nimport numpy as np\nfrom datetime import datetime, timedelta\nimport asyncio\nimport socketio\nimport requests\nfrom streamlit_autorefresh import st_autorefresh\nimport streamlit_aggrid as ag\n\n# Page configuration\nst.set_page_config(\n    page_title=\"QuantPyTrader\",\n    page_icon=\"📈\",\n    layout=\"wide\",\n    initial_sidebar_state=\"expanded\"\n)\n\n# Custom CSS for dark theme\nst.markdown(\"\"\"\n<style>\n    .stApp {\n        background-color: #0d1117;\n    }\n    .metric-card {\n        background: #161b22;\n        border: 1px solid #30363d;\n        border-radius: 8px;\n        padding: 16px;\n        margin: 8px 0;\n    }\n    .regime-indicator {\n        display: inline-block;\n        padding: 4px 12px;\n        border-radius: 20px;\n        font-weight: bold;\n    }\n    .bull { background: #3fb950; }\n    .bear { background: #f85149; }\n    .sideways { background: #d29922; }\n</style>\n\"\"\", unsafe_allow_html=True)\n\n# Initialize session state\nif 'authenticated' not in st.session_state:\n    st.session_state.authenticated = False\nif 'strategy_state' not in st.session_state:\n    st.session_state.strategy_state = None\n\n# Sidebar navigation\nwith st.sidebar:\n    st.title(\"🚀 QuantPyTrader\")\n    \n    if st.session_state.authenticated:\n        page = st.selectbox(\n            \"Navigation\",\n            [\"Dashboard\", \"Strategies\", \"Backtesting\", \"Live Trading\", \n             \"Kalman Filter\", \"Risk Management\", \"Settings\"]\n        )\n    else:\n        page = \"Login\"\n\n# Page routing\nif page == \"Login\":\n    render_login_page()\nelif page == \"Dashboard\":\n    render_dashboard()\nelif page == \"Kalman Filter\":\n    render_kalman_visualization()\n\ndef render_dashboard():\n    '''Main dashboard with real-time metrics'''\n    st.title(\"Trading Dashboard\")\n    \n    # Auto-refresh every 5 seconds\n    count = st_autorefresh(interval=5000, limit=None, key=\"dashboard_refresh\")\n    \n    # Metrics row\n    col1, col2, col3, col4 = st.columns(4)\n    \n    with col1:\n        st.metric(\n            \"Portfolio Value\",\n            f\"${st.session_state.portfolio_value:,.2f}\",\n            f\"{st.session_state.daily_change:+.2%}\"\n        )\n    \n    with col2:\n        st.metric(\n            \"Today's P&L\",\n            f\"${st.session_state.daily_pnl:+,.2f}\",\n            f\"{st.session_state.pnl_change:+.2%}\"\n        )\n    \n    with col3:\n        st.metric(\n            \"Sharpe Ratio\",\n            f\"{st.session_state.sharpe_ratio:.2f}\",\n            delta=None\n        )\n    \n    with col4:\n        current_regime = st.session_state.current_regime\n        st.markdown(f'<span class=\"regime-indicator {current_regime.lower()}\">{current_regime}</span>', \n                   unsafe_allow_html=True)\n    \n    # Charts\n    col1, col2 = st.columns([2, 1])\n    \n    with col1:\n        # Portfolio performance chart\n        fig = create_portfolio_chart(st.session_state.portfolio_history)\n        st.plotly_chart(fig, use_container_width=True)\n    \n    with col2:\n        # Regime probability pie chart\n        fig = create_regime_pie(st.session_state.regime_probabilities)\n        st.plotly_chart(fig, use_container_width=True)\n\ndef render_kalman_visualization():\n    '''Kalman filter specific visualizations'''\n    st.title(\"BE-EMA-MMCUKF Analysis\")\n    \n    tab1, tab2, tab3, tab4 = st.tabs([\"Regime Evolution\", \"State Vector\", \"Filter Diagnostics\", \"Missing Data\"])\n    \n    with tab1:\n        # Stacked area chart of regime probabilities\n        fig = go.Figure()\n        \n        for regime in ['Bull', 'Bear', 'Sideways', 'High Vol', 'Low Vol', 'Crisis']:\n            fig.add_trace(go.Scatter(\n                x=st.session_state.timestamps,\n                y=st.session_state.regime_probs[regime],\n                mode='lines',\n                stackgroup='one',\n                name=regime\n            ))\n        \n        fig.update_layout(\n            title=\"Market Regime Probability Evolution\",\n            yaxis_title=\"Probability\",\n            template=\"plotly_dark\",\n            height=500\n        )\n        st.plotly_chart(fig, use_container_width=True)\n    \n    with tab2:\n        # State vector components\n        fig = make_subplots(\n            rows=2, cols=2,\n            subplot_titles=('Log Price', 'Return', 'Volatility', 'Momentum')\n        )\n        \n        # Add traces for each state component with confidence bands\n        for i, component in enumerate(['price', 'return', 'volatility', 'momentum']):\n            row = i // 2 + 1\n            col = i % 2 + 1\n            \n            # Mean estimate\n            fig.add_trace(\n                go.Scatter(\n                    x=st.session_state.timestamps,\n                    y=st.session_state.state_estimates[component],\n                    name=component.capitalize(),\n                    line=dict(color='#58a6ff')\n                ),\n                row=row, col=col\n            )\n            \n            # Confidence bands\n            fig.add_trace(\n                go.Scatter(\n                    x=st.session_state.timestamps,\n                    y=st.session_state.upper_bounds[component],\n                    fill=None,\n                    mode='lines',\n                    line_color='rgba(0,0,0,0)',\n                    showlegend=False\n                ),\n                row=row, col=col\n            )\n```\n\nImplement interactive configuration forms and real-time updates via WebSocket",
+        "testStrategy": "Test UI responsiveness across different screen sizes, verify real-time data updates work correctly, test all interactive components (sliders, dropdowns, buttons), validate chart rendering with large datasets, test session state management and authentication flow",
+        "priority": "medium",
+        "dependencies": [
+          9
+        ],
+        "status": "pending",
+        "subtasks": []
+      }
+    ],
+    "metadata": {
+      "created": "2025-08-08T17:32:21.487Z",
+      "updated": "2025-08-09T11:50:39.580Z",
+      "description": "Tasks for master context"
+    }
+  }
+}

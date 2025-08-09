@@ -1,0 +1,16 @@
+# Core dependencies for initial testing
+fastapi==0.104.0
+uvicorn[standard]==0.24.0
+python-dotenv==1.0.0
+pydantic==2.5.0
+pydantic-settings==2.1.0
+
+# Basic data processing
+pandas==2.1.0
+numpy==1.24.0
+
+# Database
+sqlalchemy==2.0.0
+
+# Configuration and utilities
+requests==2.31.0
