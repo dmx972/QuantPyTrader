@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ config.title }}</title>
+    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --primary-color: #2c3e50;
+            --secondary-color: #3498db;
+            --success-color: #27ae60;
+            --danger-color: #e74c3c;
+            --warning-color: #f39c12;
+            --info-color: #17a2b8;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f8f9fa;
+        }
+        
+        .report-header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 3rem 0;
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+        
+        .report-title {
+            font-size: 2.5rem;
+            font-weight: 300;
+            margin-bottom: 0.5rem;
+        }
+        
+        .report-subtitle {
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        
+        .metric-card {
+            background: white;
+            border-radius: 10px;
+            padding: 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: transform 0.2s ease;
+        }
+        
+        .metric-card:hover {
+            transform: translateY(-2px);
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+        
+        .metric-label {
+            color: #666;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .positive { color: var(--success-color); }
+        .negative { color: var(--danger-color); }
+        .neutral { color: var(--info-color); }
+        
+        .section {
+            background: white;
+            border-radius: 10px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section-title {
+            color: var(--primary-color);
+            border-bottom: 3px solid var(--secondary-color);
+            padding-bottom: 0.5rem;
+            margin-bottom: 1.5rem;
+        }
+        
+        .chart-container {
+            margin: 1.5rem 0;
+            text-align: center;
+        }
+        
+        .info-table {
+            margin: 1rem 0;
+        }
+        
+        .info-table th {
+            background-color: var(--primary-color);
+            color: white;
+            font-weight: 500;
+        }
+        
+        .badge-custom {
+            font-size: 0.8rem;
+            padding: 0.4rem 0.8rem;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 2rem;
+            color: #666;
+            border-top: 1px solid #ddd;
+            margin-top: 3rem;
+        }
+        
+        @media print {
+            .report-header {
+                background: var(--primary-color) !important;
+            }
+            .section {
+                page-break-inside: avoid;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <div class="report-header">
+        <div class="container">
+            <h1 class="report-title">{{ config.title }}</h1>
+            {% if config.subtitle %}
+            <p class="report-subtitle">{{ config.subtitle }}</p>
+            {% endif %}
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h3>{{ backtest.name }}</h3>
+                    <p><strong>Strategy:</strong> {{ backtest.strategy_name }} ({{ backtest.strategy_type }})</p>
+                </div>
+                <div class="col-md-6">
+                    <p><strong>Period:</strong> {{ backtest.start_date }} to {{ backtest.end_date }}</p>
+                    <p><strong>Initial Capital:</strong> ${{ "{:,.2f}".format(backtest.initial_capital) }}</p>
+                </div>
+            </div>
+            <p class="mt-3"><small>Generated on {{ generated_at.strftime('%Y-%m-%d %H:%M:%S') }}</small></p>
+        </div>
+    </div>
+
+    <div class="container">
+        <!-- Executive Summary -->
+        {% if config.include_executive_summary %}
+        <div class="section">
+            <h2 class="section-title">Executive Summary</h2>
+            <div class="row">
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value {% if summary_stats.total_return_pct > 0 %}positive{% else %}negative{% endif %}">
+                            {{ "%.2f"|format(summary_stats.total_return_pct) }}%
+                        </div>
+                        <div class="metric-label">Total Return</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value {% if summary_stats.annualized_return_pct > 0 %}positive{% else %}negative{% endif %}">
+                            {{ "%.2f"|format(summary_stats.annualized_return_pct) }}%
+                        </div>
+                        <div class="metric-label">Annualized Return</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value {% if summary_stats.sharpe_ratio > 1 %}positive{% elif summary_stats.sharpe_ratio > 0 %}neutral{% else %}negative{% endif %}">
+                            {{ "%.2f"|format(summary_stats.sharpe_ratio) }}
+                        </div>
+                        <div class="metric-label">Sharpe Ratio</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value negative">
+                            -{{ "%.2f"|format(summary_stats.max_drawdown_pct) }}%
+                        </div>
+                        <div class="metric-label">Max Drawdown</div>
+                    </div>
+                </div>
+            </div>
+            
+            {% if summary_stats.total_trades %}
+            <div class="row mt-3">
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value">{{ summary_stats.total_trades }}</div>
+                        <div class="metric-label">Total Trades</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value positive">{{ summary_stats.winning_trades }}</div>
+                        <div class="metric-label">Wins</div>
+                    </div>
+                </div>
+                <div class="col-md-2">
+                    <div class="metric-card">
+                        <div class="metric-value negative">{{ summary_stats.losing_trades }}</div>
+                        <div class="metric-label">Losses</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value {% if summary_stats.win_rate_pct > 50 %}positive{% else %}negative{% endif %}">
+                            {{ "%.1f"|format(summary_stats.win_rate_pct) }}%
+                        </div>
+                        <div class="metric-label">Win Rate</div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="metric-card">
+                        <div class="metric-value">{{ "%.2f"|format(summary_stats.profit_factor) }}</div>
+                        <div class="metric-label">Profit Factor</div>
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Portfolio Performance -->
+        {% if charts.equity_curve %}
+        <div class="section">
+            <h2 class="section-title">Portfolio Performance</h2>
+            <div class="chart-container">
+                <div id="equity_curve"></div>
+            </div>
+            
+            {% if data.portfolio_history|length > 0 %}
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Performance Metrics</h5>
+                    <table class="table table-sm info-table">
+                        <tr><th>Initial Value</th><td>${{ "{:,.2f}".format(data.portfolio_history.iloc[0]['total_value']) }}</td></tr>
+                        <tr><th>Final Value</th><td>${{ "{:,.2f}".format(data.portfolio_history.iloc[-1]['total_value']) }}</td></tr>
+                        <tr><th>Peak Value</th><td>${{ "{:,.2f}".format(data.portfolio_history['total_value'].max()) }}</td></tr>
+                        <tr><th>Volatility</th><td>{{ "%.2f"|format(summary_stats.volatility_pct) }}%</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>Risk Metrics</h5>
+                    <table class="table table-sm info-table">
+                        {% if backtest.performance %}
+                        <tr><th>Alpha</th><td>{{ "%.4f"|format(backtest.performance.alpha or 0) }}</td></tr>
+                        <tr><th>Beta</th><td>{{ "%.4f"|format(backtest.performance.beta or 0) }}</td></tr>
+                        <tr><th>Sortino Ratio</th><td>{{ "%.4f"|format(backtest.performance.sortino_ratio or 0) }}</td></tr>
+                        <tr><th>Calmar Ratio</th><td>{{ "%.4f"|format(backtest.performance.calmar_ratio or 0) }}</td></tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Risk Analysis -->
+        {% if config.include_risk_analysis and (charts.drawdown or charts.risk_metrics) %}
+        <div class="section">
+            <h2 class="section-title">Risk Analysis</h2>
+            
+            {% if charts.drawdown %}
+            <div class="chart-container">
+                <div id="drawdown_chart"></div>
+            </div>
+            {% endif %}
+            
+            {% if charts.returns_dist %}
+            <div class="chart-container">
+                <div id="returns_dist"></div>
+            </div>
+            {% endif %}
+            
+            {% if charts.risk_metrics %}
+            <div class="chart-container">
+                <div id="risk_metrics"></div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Trade Analysis -->
+        {% if config.include_trade_analysis and charts.trade_analysis %}
+        <div class="section">
+            <h2 class="section-title">Trade Analysis</h2>
+            
+            {% for i in range(charts.trade_analysis|length) %}
+            <div class="chart-container">
+                <div id="trade_chart_{{ i }}"></div>
+            </div>
+            {% endfor %}
+            
+            {% if data.trades|length > 0 %}
+            <div class="row mt-4">
+                <div class="col-md-12">
+                    <h5>Trade Statistics</h5>
+                    <table class="table table-striped info-table">
+                        <thead>
+                            <tr>
+                                <th>Metric</th>
+                                <th>All Trades</th>
+                                <th>Winning Trades</th>
+                                <th>Losing Trades</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Count</strong></td>
+                                <td>{{ data.trades|length }}</td>
+                                <td class="positive">{{ summary_stats.winning_trades }}</td>
+                                <td class="negative">{{ summary_stats.losing_trades }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Average P&L</strong></td>
+                                <td>${{ "%.2f"|format(data.trades['net_pnl'].mean()) }}</td>
+                                <td class="positive">${{ "%.2f"|format(summary_stats.avg_win) }}</td>
+                                <td class="negative">${{ "%.2f"|format(summary_stats.avg_loss) }}</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Total P&L</strong></td>
+                                <td class="{% if data.trades['net_pnl'].sum() > 0 %}positive{% else %}negative{% endif %}">
+                                    ${{ "%.2f"|format(data.trades['net_pnl'].sum()) }}
+                                </td>
+                                <td class="positive">${{ "%.2f"|format(data.trades[data.trades['net_pnl'] > 0]['net_pnl'].sum()) }}</td>
+                                <td class="negative">${{ "%.2f"|format(data.trades[data.trades['net_pnl'] <= 0]['net_pnl'].sum()) }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Regime Analysis -->
+        {% if config.include_regime_analysis and charts.regime_heatmap %}
+        <div class="section">
+            <h2 class="section-title">Market Regime Analysis</h2>
+            <p class="text-muted mb-4">
+                BE-EMA-MMCUKF regime detection and probability evolution over the backtest period.
+            </p>
+            
+            <div class="chart-container">
+                <div id="regime_heatmap"></div>
+            </div>
+            
+            {% if 'regime_data' in data and data.regime_data|length > 0 %}
+            <div class="row mt-4">
+                <div class="col-md-6">
+                    <h5>Dominant Regimes</h5>
+                    <table class="table table-sm info-table">
+                        {% for regime in data.regime_data['dominant_regime'].value_counts().head(3).items() %}
+                        <tr>
+                            <th>{{ regime[0] }}</th>
+                            <td>{{ regime[1] }} periods ({{ "%.1f"|format(regime[1]/data.regime_data|length*100) }}%)</td>
+                        </tr>
+                        {% endfor %}
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>Average Regime Confidence</h5>
+                    <div class="metric-value">{{ "%.1f"|format(data.regime_data['regime_confidence'].mean()*100) }}%</div>
+                </div>
+            </div>
+            {% endif %}
+        </div>
+        {% endif %}
+
+        <!-- Filter Metrics -->
+        {% if config.include_filter_metrics and 'filter_metrics' in data %}
+        <div class="section">
+            <h2 class="section-title">Kalman Filter Performance</h2>
+            <p class="text-muted mb-4">
+                BE-EMA-MMCUKF filter quality and performance metrics.
+            </p>
+            
+            <div class="row">
+                {% if data.filter_metrics.avg_log_likelihood %}
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value">{{ "%.2f"|format(data.filter_metrics.avg_log_likelihood) }}</div>
+                        <div class="metric-label">Avg Log Likelihood</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if data.filter_metrics.tracking_error %}
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value">{{ "%.4f"|format(data.filter_metrics.tracking_error) }}</div>
+                        <div class="metric-label">Tracking Error</div>
+                    </div>
+                </div>
+                {% endif %}
+                
+                {% if data.filter_metrics.filter_quality_score %}
+                <div class="col-md-4">
+                    <div class="metric-card">
+                        <div class="metric-value {% if data.filter_metrics.filter_quality_score > 0.7 %}positive{% elif data.filter_metrics.filter_quality_score > 0.5 %}neutral{% else %}negative{% endif %}">
+                            {{ "%.3f"|format(data.filter_metrics.filter_quality_score) }}
+                        </div>
+                        <div class="metric-label">Filter Quality Score</div>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Configuration Details -->
+        <div class="section">
+            <h2 class="section-title">Backtest Configuration</h2>
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>Strategy Parameters</h5>
+                    <table class="table table-sm info-table">
+                        <tr><th>Strategy Type</th><td>{{ backtest.strategy_type }}</td></tr>
+                        <tr><th>Rebalance Frequency</th><td>{{ backtest.rebalance_frequency }}</td></tr>
+                        <tr><th>Commission Rate</th><td>{{ "%.3f"|format(backtest.commission_rate*100) }}%</td></tr>
+                        <tr><th>Slippage Rate</th><td>{{ "%.4f"|format(backtest.slippage_rate*100) }}%</td></tr>
+                    </table>
+                </div>
+                <div class="col-md-6">
+                    <h5>Execution Details</h5>
+                    <table class="table table-sm info-table">
+                        <tr><th>Benchmark</th><td>{{ backtest.benchmark_symbol }}</td></tr>
+                        <tr><th>Status</th><td>
+                            <span class="badge badge-custom {% if backtest.status == 'completed' %}bg-success{% else %}bg-warning{% endif %}">
+                                {{ backtest.status|upper }}
+                            </span>
+                        </td></tr>
+                        {% if backtest.runtime_seconds %}
+                        <tr><th>Runtime</th><td>{{ "%.1f"|format(backtest.runtime_seconds) }} seconds</td></tr>
+                        {% endif %}
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div class="footer">
+        <p>Report generated by <strong>QuantPyTrader</strong> - Open Source Quantitative Trading Platform</p>
+        <p><small>BE-EMA-MMCUKF: Bayesian Estimation-based Expected Mode Augmentation Multiple Model Unscented Kalman Filter</small></p>
+    </div>
+
+    <!-- JavaScript for Charts -->
+    <script>
+        // Configure Plotly defaults
+        Plotly.setPlotConfig({
+            displayModeBar: false,
+            responsive: true
+        });
+
+        {% if charts.equity_curve %}
+        Plotly.newPlot('equity_curve', {{ charts.equity_curve|safe }});
+        {% endif %}
+        
+        {% if charts.drawdown %}
+        Plotly.newPlot('drawdown_chart', {{ charts.drawdown|safe }});
+        {% endif %}
+        
+        {% if charts.returns_dist %}
+        Plotly.newPlot('returns_dist', {{ charts.returns_dist|safe }});
+        {% endif %}
+        
+        {% if charts.risk_metrics %}
+        Plotly.newPlot('risk_metrics', {{ charts.risk_metrics|safe }});
+        {% endif %}
+        
+        {% if charts.trade_analysis %}
+        {% for i in range(charts.trade_analysis|length) %}
+        Plotly.newPlot('trade_chart_{{ i }}', {{ charts.trade_analysis[i]|safe }});
+        {% endfor %}
+        {% endif %}
+        
+        {% if charts.regime_heatmap %}
+        Plotly.newPlot('regime_heatmap', {{ charts.regime_heatmap|safe }});
+        {% endif %}
+
+        // Print functionality
+        window.addEventListener('beforeprint', function() {
+            // Adjust charts for printing
+            var charts = document.querySelectorAll('[id^="equity"], [id^="drawdown"], [id^="returns"], [id^="risk"], [id^="trade"], [id^="regime"]');
+            charts.forEach(function(chart) {
+                Plotly.relayout(chart, {
+                    'paper_bgcolor': 'white',
+                    'plot_bgcolor': 'white'
+                });
+            });
+        });
+    </script>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

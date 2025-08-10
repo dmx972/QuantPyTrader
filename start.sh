@@ -30,14 +30,14 @@ case $choice in
         ;;
     2)
         echo "📊 Starting Streamlit Dashboard..."
-        streamlit run app.py
+        streamlit run run_dashboard.py
         ;;
     3)
         echo "🔧📊 Starting both FastAPI and Streamlit..."
         echo "FastAPI will run on http://localhost:8000"
         echo "Streamlit will run on http://localhost:8501"
         python main.py &
-        streamlit run app.py
+        streamlit run run_dashboard.py
         ;;
     4)
         echo "🐳 Starting Docker Compose..."

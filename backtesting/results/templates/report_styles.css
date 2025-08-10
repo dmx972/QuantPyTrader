@@ -1,0 +1,239 @@
+/* CSS styles for QuantPyTrader Backtesting Reports */
+
+/* Base Styles */
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    line-height: 1.6;
+    color: #333;
+    margin: 0;
+    padding: 0;
+    font-size: 14px;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 20px;
+}
+
+/* Header Styles */
+.report-header {
+    background: linear-gradient(135deg, #2c3e50, #3498db);
+    color: white;
+    padding: 2rem 0;
+    text-align: center;
+    margin-bottom: 2rem;
+}
+
+.report-title {
+    font-size: 2rem;
+    font-weight: 300;
+    margin-bottom: 0.5rem;
+}
+
+.report-subtitle {
+    font-size: 1.1rem;
+    opacity: 0.9;
+}
+
+/* Card Styles */
+.metric-card {
+    background: white;
+    border-radius: 8px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+    text-align: center;
+    min-height: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+}
+
+.metric-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    margin-bottom: 0.3rem;
+}
+
+.metric-label {
+    color: #666;
+    font-size: 0.8rem;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+/* Color Classes */
+.positive { color: #27ae60; }
+.negative { color: #e74c3c; }
+.neutral { color: #3498db; }
+
+/* Section Styles */
+.section {
+    background: white;
+    border-radius: 8px;
+    padding: 1.5rem;
+    margin-bottom: 1.5rem;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    border: 1px solid #e0e0e0;
+}
+
+.section-title {
+    color: #2c3e50;
+    border-bottom: 2px solid #3498db;
+    padding-bottom: 0.5rem;
+    margin-bottom: 1rem;
+    font-size: 1.3rem;
+}
+
+/* Chart Styles */
+.chart-container {
+    margin: 1rem 0;
+    text-align: center;
+    min-height: 400px;
+}
+
+/* Table Styles */
+.info-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin: 1rem 0;
+    font-size: 0.9rem;
+}
+
+.info-table th,
+.info-table td {
+    border: 1px solid #ddd;
+    padding: 0.5rem;
+    text-align: left;
+}
+
+.info-table th {
+    background-color: #2c3e50;
+    color: white;
+    font-weight: 500;
+}
+
+.info-table tr:nth-child(even) {
+    background-color: #f8f9fa;
+}
+
+/* Badge Styles */
+.badge-custom {
+    padding: 0.3rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    text-transform: uppercase;
+}
+
+.bg-success {
+    background-color: #27ae60;
+    color: white;
+}
+
+.bg-warning {
+    background-color: #f39c12;
+    color: white;
+}
+
+/* Grid System */
+.row {
+    display: flex;
+    flex-wrap: wrap;
+    margin: -0.5rem;
+}
+
+.col-md-2 { flex: 0 0 16.666667%; }
+.col-md-3 { flex: 0 0 25%; }
+.col-md-4 { flex: 0 0 33.333333%; }
+.col-md-6 { flex: 0 0 50%; }
+.col-md-12 { flex: 0 0 100%; }
+
+.col-md-2,
+.col-md-3,
+.col-md-4,
+.col-md-6,
+.col-md-12 {
+    padding: 0.5rem;
+}
+
+/* Footer */
+.footer {
+    text-align: center;
+    padding: 2rem;
+    color: #666;
+    border-top: 1px solid #ddd;
+    margin-top: 2rem;
+    background-color: #f8f9fa;
+}
+
+/* Utility Classes */
+.text-muted {
+    color: #6c757d;
+}
+
+.mb-4 {
+    margin-bottom: 1.5rem;
+}
+
+.mt-3 {
+    margin-top: 1rem;
+}
+
+.mt-4 {
+    margin-top: 1.5rem;
+}
+
+/* Print Styles */
+@media print {
+    body {
+        font-size: 12px;
+    }
+    
+    .report-header {
+        background: #2c3e50 !important;
+        -webkit-print-color-adjust: exact;
+        color-adjust: exact;
+    }
+    
+    .section {
+        break-inside: avoid;
+        page-break-inside: avoid;
+    }
+    
+    .metric-card {
+        break-inside: avoid;
+    }
+    
+    .chart-container {
+        min-height: 300px;
+    }
+    
+    .row {
+        break-inside: avoid;
+    }
+}
+
+/* PDF-specific styles */
+@media screen and (max-width: 1200px) {
+    .container {
+        padding: 0 10px;
+    }
+    
+    .row {
+        flex-direction: column;
+    }
+    
+    .col-md-2,
+    .col-md-3,
+    .col-md-4,
+    .col-md-6 {
+        flex: 0 0 100%;
+    }
+}

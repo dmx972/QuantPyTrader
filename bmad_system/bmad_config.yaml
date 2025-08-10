@@ -1,0 +1,361 @@
+# BMAD System Configuration
+# ========================
+# Configuration for the Breakthrough Method for Agile AI-Driven Development
+# sub-agent system integrated with Task Master AI for QuantPyTrader
+
+# BMAD Core Configuration
+bmad_core:
+  version: "1.0.0"
+  project_name: "QuantPyTrader"
+  methodology_compliance: true
+  
+  # BMAD Principles Configuration
+  principles:
+    breakthrough:
+      enabled: true
+      innovation_threshold: 0.75
+      encourage_creative_solutions: true
+      
+    method:
+      enabled: true
+      structured_workflows: true
+      quality_gates: true
+      documentation_required: true
+      
+    agile:
+      enabled: true
+      iteration_cycles: true
+      continuous_feedback: true
+      rapid_adaptation: true
+      
+    ai_driven:
+      enabled: true
+      intelligent_routing: true
+      automated_optimization: true
+      ml_enhanced_decisions: true
+      
+    development:
+      enabled: true
+      deliverable_focus: true
+      incremental_progress: true
+      working_software_priority: true
+
+# Task Management Configuration
+task_management:
+  # Complexity Management
+  complexity:
+    max_task_complexity: 3
+    auto_decompose_threshold: 4
+    decomposition_strategies:
+      - "sequential"
+      - "parallel" 
+      - "hierarchical"
+      - "domain_split"
+      - "phase_split"
+  
+  # Task Master Integration
+  task_master:
+    project_path: "/home/mx97/Desktop/project"
+    sync_interval_minutes: 15
+    auto_sync: true
+    command_timeout_seconds: 120
+    
+  # Quality Assurance
+  quality:
+    min_quality_score: 0.85
+    validation_required: true
+    peer_review_threshold: 7
+    documentation_coverage: 0.80
+
+# Agent Configuration
+agents:
+  # Global Agent Settings
+  global:
+    max_concurrent_tasks: 5
+    timeout_minutes: 30
+    retry_attempts: 3
+    validation_enabled: true
+    
+  # Domain-Specific Agent Configuration
+  data_pipeline:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "market_data_apis"
+      - "real_time_streaming"
+      - "data_aggregation" 
+      - "caching_strategies"
+      - "websocket_management"
+      - "data_quality_validation"
+      - "failover_systems"
+    performance_targets:
+      latency_ms: 100
+      throughput_rps: 1000
+      availability: 0.99
+      
+  kalman_filter:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "unscented_kalman_filter"
+      - "multiple_model_frameworks"
+      - "bayesian_estimation"
+      - "market_regime_modeling"
+      - "state_persistence"
+      - "missing_data_compensation"
+      - "numerical_optimization"
+      - "mathematical_validation"
+    performance_targets:
+      update_cycle_ms: 100
+      numerical_precision: 1e-12
+      memory_efficiency: 0.85
+      
+  backtesting:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "portfolio_management"
+      - "performance_metrics"
+      - "walk_forward_analysis"
+      - "regime_aware_testing"
+      - "transaction_costs"
+      - "risk_analysis"
+      - "report_generation"
+    performance_targets:
+      backtest_speed: "1000 days/second"
+      memory_usage_gb: 4
+      accuracy: 0.99
+      
+  api_backend:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "fastapi_development"
+      - "websocket_implementation"
+      - "authentication_systems"
+      - "database_integration"
+      - "async_processing"
+      - "api_documentation"
+      - "performance_optimization"
+    performance_targets:
+      response_time_ms: 200
+      concurrent_connections: 1000
+      uptime: 0.995
+      
+  ui_frontend:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "streamlit_development"
+      - "react_implementation"
+      - "dashboard_creation"
+      - "data_visualization"
+      - "real_time_updates"
+      - "responsive_design"
+      - "user_experience"
+    performance_targets:
+      page_load_ms: 2000
+      interactive_delay_ms: 100
+      mobile_compatibility: true
+      
+  trading_execution:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "order_management"
+      - "broker_integration"
+      - "position_tracking"
+      - "execution_algorithms"
+      - "latency_optimization"
+      - "compliance_checks"
+      - "error_handling"
+    performance_targets:
+      execution_latency_ms: 50
+      order_accuracy: 0.9999
+      recovery_time_s: 5
+      
+  risk_management:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "var_calculation"
+      - "drawdown_monitoring"
+      - "portfolio_optimization"
+      - "risk_limits"
+      - "correlation_analysis"
+      - "stress_testing"
+      - "regulatory_compliance"
+    performance_targets:
+      risk_calculation_ms: 500
+      monitoring_frequency_s: 1
+      alert_latency_ms: 100
+      
+  testing_quality:
+    enabled: true
+    max_complexity: 3
+    specializations:
+      - "unit_testing"
+      - "integration_testing"
+      - "performance_testing"
+      - "security_testing"
+      - "test_automation"
+      - "quality_metrics"
+      - "ci_cd_integration"
+    performance_targets:
+      test_coverage: 0.85
+      test_execution_time_s: 300
+      false_positive_rate: 0.05
+
+# Coordination Configuration
+coordination:
+  # Workflow Management
+  workflow:
+    max_parallel_tasks: 10
+    phase_timeout_minutes: 60
+    quality_gate_enforcement: true
+    progress_tracking: true
+    
+  # Performance Monitoring
+  monitoring:
+    enabled: true
+    metrics_collection_interval_s: 30
+    performance_alerts: true
+    health_checks: true
+    
+  # Optimization Settings
+  optimization:
+    auto_optimization: true
+    optimization_interval_minutes: 30
+    performance_threshold: 0.80
+    load_balancing: true
+
+# Integration Configuration
+integration:
+  # Task Master AI
+  task_master_ai:
+    enabled: true
+    api_timeout_s: 30
+    retry_policy: "exponential_backoff"
+    max_retries: 3
+    
+  # External Services
+  external_services:
+    redis:
+      enabled: true
+      host: "localhost"
+      port: 6379
+      timeout_s: 5
+      
+    database:
+      type: "sqlite"
+      path: "data/bmad_system.db"
+      backup_interval_hours: 4
+      
+    logging:
+      level: "INFO"
+      file: "logs/bmad_system.log"
+      max_size_mb: 100
+      backup_count: 5
+
+# Security Configuration
+security:
+  # Authentication
+  authentication:
+    required: false
+    method: "api_key"
+    token_expiry_hours: 24
+    
+  # Data Protection
+  data_protection:
+    encryption_at_rest: false
+    encryption_in_transit: true
+    pii_handling: "anonymize"
+    
+  # Access Control
+  access_control:
+    role_based: false
+    audit_logging: true
+    rate_limiting: true
+
+# Development Configuration
+development:
+  # Debug Settings
+  debug:
+    enabled: true
+    verbose_logging: true
+    performance_profiling: true
+    
+  # Testing
+  testing:
+    auto_testing: true
+    test_data_generation: true
+    mock_services: true
+    
+  # Documentation
+  documentation:
+    auto_generation: true
+    api_docs: true
+    code_examples: true
+
+# Deployment Configuration  
+deployment:
+  # Environment
+  environment: "development"
+  
+  # Scaling
+  scaling:
+    auto_scaling: false
+    min_agents: 1
+    max_agents: 8
+    scale_threshold: 0.80
+    
+  # Health Checks
+  health_checks:
+    enabled: true
+    interval_s: 30
+    timeout_s: 10
+    
+  # Backup & Recovery
+  backup:
+    enabled: true
+    interval_hours: 6
+    retention_days: 30
+    
+# Notification Configuration
+notifications:
+  # Alert Settings
+  alerts:
+    enabled: true
+    channels:
+      - "log"
+      - "console"
+    severity_levels:
+      - "error"
+      - "warning"
+      - "info"
+      
+  # Progress Updates
+  progress:
+    enabled: true
+    milestone_notifications: true
+    completion_notifications: true
+    
+# Performance Configuration
+performance:
+  # Resource Limits
+  resources:
+    max_memory_gb: 8
+    max_cpu_cores: 4
+    disk_space_gb: 50
+    
+  # Optimization
+  optimization:
+    cache_enabled: true
+    compression_enabled: true
+    connection_pooling: true
+    
+  # Metrics
+  metrics:
+    collection_enabled: true
+    retention_days: 7
+    aggregation_interval_s: 60

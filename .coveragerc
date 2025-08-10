@@ -1,0 +1,55 @@
+# Coverage configuration for QuantPyTrader
+
+[run]
+source = backtesting
+omit = 
+    */tests/*
+    */test_*
+    */__pycache__/*
+    */venv/*
+    */.venv/*
+    */env/*
+    */.env/*
+    */site-packages/*
+    */migrations/*
+    */manage.py
+    */setup.py
+    */conftest.py
+
+# Enable branch coverage
+branch = True
+
+# Parallel processing
+parallel = True
+
+[report]
+# Reporting options
+skip_covered = False
+show_missing = True
+sort = Cover
+precision = 2
+
+# Exclude patterns
+exclude_lines =
+    pragma: no cover
+    def __repr__
+    raise AssertionError
+    raise NotImplementedError
+    if __name__ == .__main__.:
+    if TYPE_CHECKING:
+    @abstract
+    @abc.abstractmethod
+    pass
+    \.\.\.
+
+[html]
+directory = htmlcov
+title = QuantPyTrader Test Coverage Report
+
+[xml]
+output = coverage.xml
+
+[paths]
+source = 
+    backtesting/
+    */site-packages/backtesting/

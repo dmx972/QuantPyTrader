@@ -1,0 +1,24 @@
+{
+  "allowedTools": [
+    "Edit",
+    "Read",
+    "Write", 
+    "MultiEdit",
+    "Bash(task-master *)",
+    "Bash(git *)",
+    "Bash(python *)",
+    "Bash(pip *)",
+    "Bash(npm *)",
+    "Bash(uvicorn *)",
+    "Bash(streamlit *)",
+    "mcp__task_master_ai__*",
+    "mcp__github-server__*"
+  ],
+  "blockedTools": [
+    "Bash(rm -rf *)",
+    "Bash(sudo *)"
+  ],
+  "allowedPaths": [
+    "/home/mx97/**"
+  ]
+}

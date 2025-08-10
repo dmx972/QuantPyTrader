@@ -6,10 +6,12 @@
 			"args": [
 				"-y",
 				"--package=task-master-ai",
-				"task-master-ai"
+				"task-master-ai",
+				"--claude-proxy"
 			],
 			"env": {
-				"ANTHROPIC_API_KEY": "YOUR_ANTHROPIC_API_KEY_HERE",
+				"USE_CLAUDE_PROXY": "true",
+				"ANTHROPIC_API_KEY": "claude-proxy",
 				"PERPLEXITY_API_KEY": "YOUR_PERPLEXITY_API_KEY_HERE",
 				"OPENAI_API_KEY": "YOUR_OPENAI_KEY_HERE",
 				"GOOGLE_API_KEY": "YOUR_GOOGLE_KEY_HERE",
@@ -19,6 +21,43 @@
 				"AZURE_OPENAI_API_KEY": "YOUR_AZURE_KEY_HERE",
 				"OLLAMA_API_KEY": "YOUR_OLLAMA_API_KEY_HERE"
 			}
+		},
+		"awesome-ui-component-library Docs": {
+			"command": "npx",
+			"args": [
+				"mcp-remote",
+				"https://gitmcp.io/anubhavsrivastava/awesome-ui-component-library"
+			]
+		},
+		"BMAD-METHOD Docs": {
+			"command": "npx",
+			"args": [
+				"mcp-remote",
+				"https://gitmcp.io/bmad-code-org/BMAD-METHOD"
+			]
+		},
+		"filesystem": {
+			"command": "npx",
+			"args": ["-y", "@modelcontextprotocol/server-filesystem", "/home/mx97/Desktop/project"]
+		},
+		"brave-search": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-brave-search"
+			],
+			"env": {
+				"BRAVE_API_KEY": "YOUR_BRAVE_API_KEY_HERE"
+			}
+		},
+		"sqlite": {
+			"command": "npx",
+			"args": [
+				"-y",
+				"@modelcontextprotocol/server-sqlite",
+				"--db-path",
+				"/home/mx97/Desktop/project/data/trading.db"
+			]
 		}
 	}
 }
