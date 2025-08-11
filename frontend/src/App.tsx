@@ -9,7 +9,7 @@ function App() {
   const wsConfig = getCurrentConfig();
 
   return (
-    <QuantThemeProvider initialTheme="neutral">
+    <QuantThemeProvider defaultMode="dark">
       <WebSocketProvider config={wsConfig} autoConnect={false}>
         <AppRouter />
       </WebSocketProvider>

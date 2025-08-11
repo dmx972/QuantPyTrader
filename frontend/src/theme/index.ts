@@ -1,13 +1,21 @@
 /**
- * Material UI Dark Theme Configuration for QuantPyTrader
+ * QuantPyTrader Design System - Main Export File
  *
- * This file configures the dark theme optimized for trading dashboards
- * with high contrast and accessibility for financial data visualization.
+ * Comprehensive design system with regime-aware theming,
+ * typography system, and Material UI integration.
  */
 
+// New design system exports
+export * from './colors';
+export * from './typography';
+export * from './spacing';
+export * from './theme';
+export * from './ThemeProvider';
+
+// Legacy Material UI theme for backwards compatibility
 import { createTheme, ThemeOptions } from '@mui/material/styles';
 
-// QuantPyTrader Color Palette
+// QuantPyTrader Color Palette (Legacy)
 const quantColors = {
   // Primary colors for trading interface
   primary: {
@@ -80,7 +88,7 @@ const quantColors = {
   },
 };
 
-// Base theme options
+// Base theme options (Legacy)
 const baseThemeOptions: ThemeOptions = {
   palette: {
     mode: 'dark',
@@ -326,13 +334,13 @@ const baseThemeOptions: ThemeOptions = {
   },
 };
 
-// Create the theme
+// Create the legacy theme
 export const quantDarkTheme = createTheme(baseThemeOptions);
 
-// Export color constants for use in custom components
+// Export legacy color constants for backwards compatibility
 export { quantColors };
 
-// Theme variants for different trading contexts
+// Legacy theme variants for different trading contexts
 export const createTradingTheme = (variant: 'bull' | 'bear' | 'neutral' = 'neutral') => {
   const variantColors = {
     bull: { accent: quantColors.trading.bull },
