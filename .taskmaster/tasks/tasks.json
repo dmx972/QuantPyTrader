@@ -933,7 +933,7 @@
         "dependencies": [
           14
         ],
-        "status": "pending",
+        "status": "done",
         "subtasks": [
           {
             "id": 1,
@@ -941,7 +941,7 @@
             "description": "Implement a D3.js-based circular gauge component that displays real-time regime probabilities for all six market states with smooth animations and color-coded sectors",
             "dependencies": [],
             "details": "Build RegimeGauge component in /backtesting/dashboard/components/regime_gauge.py using D3.js or recharts. Create circular gauge with 6 sectors (Bull, Bear, Sideways, High Vol, Low Vol, Crisis) with dynamic sizing based on probability values. Implement smooth animated transitions when probabilities change. Use color scheme: Bull (green #3fb950), Bear (red #f85149), Sideways (gray #8b949e), High Vol (orange #d29922), Low Vol (blue #58a6ff), Crisis (purple #a371f7). Add inner circle showing dominant regime with percentage. Include hover tooltips showing exact probability values and historical averages. Ensure responsive sizing and mobile compatibility.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test with mock probability data updates at various frequencies, verify animation smoothness and accuracy, validate color accessibility, test responsive behavior across screen sizes"
           },
           {
@@ -950,7 +950,7 @@
             "description": "Develop an interactive D3.js heatmap visualization showing regime transition probabilities and historical transition patterns with tooltips and time-based filtering",
             "dependencies": [],
             "details": "Create RegimeTransitionHeatmap in /backtesting/dashboard/components/regime_heatmap.py using D3.js heatmap. Build 6x6 matrix visualization showing transition probabilities between all regime pairs. Implement color intensity mapping (0-100% probability) with diverging color scale. Add interactive tooltips showing: transition probability, historical frequency, average duration before transition, last occurrence timestamp. Include time range selector for historical analysis (1D, 1W, 1M, 3M, 1Y, All). Add row/column highlighting on hover for better readability. Implement click-to-drill-down showing historical instances of specific transitions. Include export functionality for heatmap data as CSV/PNG.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Validate mathematical accuracy of transition probabilities, test tooltip data correctness, verify time filtering logic, test interactive features and export functionality"
           },
           {
@@ -962,7 +962,7 @@
               "16.2"
             ],
             "details": "Build StateEstimationPlots in /backtesting/dashboard/components/state_plots.py. Create multi-panel visualization showing: 1) State vector evolution [price, return, volatility, momentum] with confidence bands (1σ, 2σ, 3σ). 2) Covariance matrix visualization as ellipse plots for state uncertainty. 3) Innovation sequence plots for filter health monitoring. 4) Likelihood score time series for each regime. Implement synchronized pan/zoom across all panels. Add toggle controls for confidence interval visibility. Include residual analysis plots showing prediction errors. Add sigma point visualization for UKF diagnostic view. Implement real-time update capability with WebSocket data streaming.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Test with synthetic Kalman filter outputs, verify mathematical correctness of confidence intervals, validate real-time update performance, test synchronization of multi-panel interactions"
           },
           {
@@ -975,7 +975,7 @@
               "16.3"
             ],
             "details": "Create RegimePerformanceAttribution in /backtesting/dashboard/components/regime_performance.py. Implement stacked bar chart showing P&L contribution by regime over time. Add summary statistics panel: total P&L per regime, win rate per regime, average trade duration per regime, Sharpe ratio per regime. Create treemap visualization for regime contribution to total returns. Implement waterfall chart showing cumulative P&L evolution with regime annotations. Add regime-specific metrics: best/worst trades per regime, maximum drawdown per regime, recovery time analysis. Include comparison mode to benchmark against buy-and-hold strategy. Add export functionality for performance reports (PDF/Excel).",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Verify P&L calculation accuracy across regimes, test aggregation logic for different time periods, validate visual representations match underlying data, test export functionality"
           },
           {
@@ -989,7 +989,7 @@
               "16.4"
             ],
             "details": "Create WebSocket service in /backtesting/dashboard/services/websocket_service.py for real-time data streaming. Implement data transformation utilities in /backtesting/dashboard/utils/filter_transforms.py to convert BE-EMA-MMCUKF outputs to visualization formats. Build RegimeHistoryTimeline component showing regime evolution with: interactive time slider, regime duration bands, transition markers, annotation support for major events. Add global interaction controls: synchronized time range selection across all components, play/pause for real-time updates, speed controls for historical playback. Implement data buffering and throttling for smooth visualization updates. Add performance monitoring to ensure 60fps animation targets.",
-            "status": "pending",
+            "status": "done",
             "testStrategy": "Load test WebSocket with high-frequency updates, verify data transformation accuracy, test timeline interaction responsiveness, benchmark rendering performance with large datasets"
           }
         ]
@@ -1210,7 +1210,7 @@
     ],
     "metadata": {
       "created": "2025-08-08T17:32:21.487Z",
-      "updated": "2025-08-11T00:17:38.644Z",
+      "updated": "2025-08-11T00:32:03.142Z",
       "description": "Tasks for master context"
     }
   }

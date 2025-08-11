@@ -11,6 +11,7 @@ import { AppLayout } from '../components/Layout/AppLayout';
 
 // Lazy load components for better performance
 const Dashboard = React.lazy(() => import('../pages/Dashboard'));
+const RegimeDashboard = React.lazy(() => import('../pages/RegimeDashboard'));
 const Trading = React.lazy(() => import('../pages/Trading'));
 const Backtesting = React.lazy(() => import('../pages/Backtesting'));
 const Portfolio = React.lazy(() => import('../pages/Portfolio'));
@@ -105,6 +106,16 @@ export const AppRouter: React.FC = () => {
             element={
               <Suspense fallback={<LoadingFallback message="Loading trading interface..." />}>
                 <Trading />
+              </Suspense>
+            }
+          />
+
+          {/* Regime Dashboard */}
+          <Route
+            path="regimes"
+            element={
+              <Suspense fallback={<LoadingFallback message="Loading regime dashboard..." />}>
+                <RegimeDashboard />
               </Suspense>
             }
           />
