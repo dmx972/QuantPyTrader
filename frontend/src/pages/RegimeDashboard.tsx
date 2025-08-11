@@ -16,9 +16,12 @@ import {
   Switch,
   FormControlLabel,
   Button,
-  Alert
+  Alert,
+  Chip
 } from '@mui/material';
 import { styled } from '@mui/material/styles';
+import { useRealTimeData } from '../hooks/useRealTimeData';
+import { PerformanceMonitorService } from '../services/performanceMonitor.service';
 import {
   RegimeGauge,
   RegimeTransitionHeatmap, 
@@ -207,39 +210,107 @@ const mockFilterMetrics: FilterMetrics = {
 export const RegimeDashboard: React.FC = () => {
   const [realTimeMode, setRealTimeMode] = useState(false);
   const [selectedRegime, setSelectedRegime] = useState<string>('');
-  const [lastUpdate, setLastUpdate] = useState(new Date());
   
-  // Generate mock data
-  const [regimeData, setRegimeData] = useState<RegimeData[]>(() => generateRegimeData());
+  // Real-time data integration
+  const [realTimeState, realTimeActions] = useRealTimeData({
+    symbols: ['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'SPY'],
+    enableRegimeUpdates: true,
+    updateInterval: 5000,
+    autoConnect: realTimeMode,
+    mockMode: true, // Enable mock mode for demonstration
+  });
+
+  // Performance monitoring
+  const [performanceMetrics, setPerformanceMetrics] = useState<any>(null);
+  const performanceMonitor = useMemo(() => PerformanceMonitorService.getInstance(), []);
+
+  // Generate mock data (fallback when real-time is disabled)
+  const [mockRegimeData, setMockRegimeData] = useState<RegimeData[]>(() => generateRegimeData());
   const [transitionData] = useState<TransitionData[]>(() => generateTransitionData());
   const [stateData] = useState<StateEstimationData[]>(() => generateStateEstimationData(24));
   const [performanceData] = useState<RegimePerformanceData[]>(() => generatePerformanceData());
   const [timeSeriesData] = useState<TimeSeriesData[]>(() => generateTimeSeriesData(90));
+
+  // Use real-time regime data when available, otherwise use mock data
+  const regimeData = useMemo(() => {
+    if (realTimeMode && realTimeState.regimeData) {
+      // Convert real-time regime data to RegimeData format
+      return Object.entries(realTimeState.regimeData.regimeProbabilities).map(([regime, probability]) => ({
+        regime,
+        probability,
+        confidence: realTimeState.regimeData!.confidence,
+        lastUpdate: realTimeState.regimeData!.timestamp,
+      }));
+    }
+    return mockRegimeData;
+  }, [realTimeMode, realTimeState.regimeData, mockRegimeData]);
+
+  const lastUpdate = realTimeState.lastUpdate || new Date();
 
   // Calculate total return from performance data
   const totalReturn = useMemo(() => {
     return performanceData.reduce((sum, d) => sum + d.returnContribution, 0);
   }, [performanceData]);
 
-  // Real-time data simulation
+  // Performance monitoring
   useEffect(() => {
-    if (!realTimeMode) return;
-    
-    const interval = setInterval(() => {
-      setRegimeData(generateRegimeData());
-      setLastUpdate(new Date());
-    }, 3000); // Update every 3 seconds
-    
-    return () => clearInterval(interval);
-  }, [realTimeMode]);
+    const unsubscribe = performanceMonitor.subscribe((metrics) => {
+      setPerformanceMetrics(metrics);
+    });
+
+    return unsubscribe;
+  }, [performanceMonitor]);
+
+  // Real-time mode management
+  useEffect(() => {
+    if (realTimeMode) {
+      // Subscribe to symbols when real-time mode is enabled
+      realTimeActions.subscribeToSymbols(['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'SPY']);
+      
+      // Record performance metrics
+      performanceMonitor.recordConnectionEvent('connect');
+    } else {
+      // Unsubscribe when real-time mode is disabled
+      realTimeActions.unsubscribeFromSymbols(['AAPL', 'MSFT', 'GOOGL', 'TSLA', 'SPY']);
+      
+      // Fallback to mock data updates
+      const interval = setInterval(() => {
+        setMockRegimeData(generateRegimeData());
+      }, 3000);
+      
+      return () => clearInterval(interval);
+    }
+  }, [realTimeMode, realTimeActions, performanceMonitor]);
 
   const handleRegimeSelect = (regime: string) => {
     setSelectedRegime(regime === selectedRegime ? '' : regime);
   };
 
   const handleResetData = () => {
-    setRegimeData(generateRegimeData());
-    setLastUpdate(new Date());
+    if (realTimeMode) {
+      realTimeActions.refreshData();
+    } else {
+      setMockRegimeData(generateRegimeData());
+    }
+  };
+
+  const handleRealTimeModeChange = (enabled: boolean) => {
+    setRealTimeMode(enabled);
+    if (enabled) {
+      performanceMonitor.recordConnectionEvent('connect');
+    } else {
+      performanceMonitor.recordConnectionEvent('disconnect');
+    }
+  };
+
+  // Performance status color
+  const getStatusColor = (status: string) => {
+    switch (status) {
+      case 'connected': return 'success';
+      case 'connecting': return 'warning';
+      case 'error': return 'error';
+      default: return 'default';
+    }
   };
 
   return (
@@ -255,14 +326,38 @@ export const RegimeDashboard: React.FC = () => {
           </Typography>
         </Box>
         <Box display="flex" alignItems="center" gap={2}>
+          {/* Performance Metrics Display */}
+          {performanceMetrics && (
+            <Box display="flex" alignItems="center" gap={1}>
+              <Typography variant="caption" color="text.secondary">
+                Latency: {Math.round(performanceMetrics.dataLatency.current)}ms
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                |
+              </Typography>
+              <Typography variant="caption" color="text.secondary">
+                Updates/sec: {Math.round(performanceMetrics.throughput.updatesPerSecond)}
+              </Typography>
+            </Box>
+          )}
+          
+          {/* Connection Status */}
+          <Chip 
+            label={realTimeState.connectionStatus.toUpperCase()}
+            color={getStatusColor(realTimeState.connectionStatus) as any}
+            size="small"
+            variant={realTimeMode ? "filled" : "outlined"}
+          />
+          
           <Typography variant="caption" color="text.secondary">
             Last Update: {lastUpdate.toLocaleTimeString()}
           </Typography>
+          
           <FormControlLabel
             control={
               <Switch
                 checked={realTimeMode}
-                onChange={(e) => setRealTimeMode(e.target.checked)}
+                onChange={(e) => handleRealTimeModeChange(e.target.checked)}
               />
             }
             label="Real-time Mode"
@@ -276,9 +371,36 @@ export const RegimeDashboard: React.FC = () => {
       {/* Control Panel */}
       <ControlPanel elevation={1}>
         <Box display="flex" alignItems="center" justifyContent="space-between">
-          <Typography variant="h6">
-            Regime Analysis Dashboard
-          </Typography>
+          <Box>
+            <Typography variant="h6">
+              Regime Analysis Dashboard
+            </Typography>
+            {/* Real-time Quote Display */}
+            {realTimeMode && Object.keys(realTimeState.quotes).length > 0 && (
+              <Box display="flex" gap={2} mt={1}>
+                {Object.entries(realTimeState.quotes).slice(0, 5).map(([symbol, quote]) => (
+                  <Box key={symbol} display="flex" alignItems="center" gap={1}>
+                    <Typography variant="caption" fontWeight="bold">
+                      {symbol}:
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      color={quote.change >= 0 ? 'success.main' : 'error.main'}
+                    >
+                      ${quote.price.toFixed(2)}
+                    </Typography>
+                    <Typography 
+                      variant="caption" 
+                      color={quote.change >= 0 ? 'success.main' : 'error.main'}
+                      fontSize="0.7rem"
+                    >
+                      ({quote.change >= 0 ? '+' : ''}{quote.changePercent.toFixed(2)}%)
+                    </Typography>
+                  </Box>
+                ))}
+              </Box>
+            )}
+          </Box>
           <Box display="flex" gap={2}>
             {selectedRegime && (
               <Alert severity="info" sx={{ py: 0 }}>
@@ -287,7 +409,12 @@ export const RegimeDashboard: React.FC = () => {
             )}
             {realTimeMode && (
               <Alert severity="success" sx={{ py: 0 }}>
-                Real-time Updates Active
+                Real-time Updates Active ({realTimeState.subscribedSymbols.length} symbols)
+              </Alert>
+            )}
+            {realTimeState.error && (
+              <Alert severity="error" sx={{ py: 0 }}>
+                {realTimeState.error}
               </Alert>
             )}
           </Box>
